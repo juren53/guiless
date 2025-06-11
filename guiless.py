@@ -787,8 +787,7 @@ class GuiLess(QMainWindow):
     def open_user_guide(self):
         """Open the user guide in the default web browser"""
         # GitHub URL for the help documentation
-        # TODO: Update this URL when the repository is published on GitHub
-        github_help_url = "https://github.com/YOUR_USERNAME/guiless/blob/main/Docs/HELP.md"
+        github_help_url = "https://github.com/juren53/guiless/blob/main/Docs/HELP.md"
         
         try:
             webbrowser.open(github_help_url)
