@@ -149,11 +149,25 @@ The application is designed to easily add support for:
 - Binary file viewing (hex mode)
 - Custom word wrap options (character limits, smart breaks)
 
+## Project Organization
+
+### Current vs Legacy
+⚗ **Important**: This is the current, active GUI Less project.
+
+- **Current Project**: `/home/juren/Projects/guiless/` (this directory)
+- **Legacy Prototype**: `/home/juren/Projects/guiless-old-prototype/` (deprecated)
+
+**Always use this directory** (`/home/juren/Projects/guiless/`) for:
+- Running the application
+- Development work
+- Bug reports and features
+- Documentation updates
+
 ## Development
 
 ### Project Structure
 ```
-guiless2/
+guiless/
 ├── guiless.py          # Main application
 ├── requirements.txt    # Python dependencies
 ├── README.md          # This file
