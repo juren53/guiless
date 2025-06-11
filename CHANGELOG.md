@@ -19,6 +19,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Last directory memory - file dialogs remember the last directory accessed
 - Navigation controls (Previous Pages/Next Pages) are visible by default
 - Enhanced configuration system with backward compatibility for existing users
+- **User Guide menu item** in Help menu linking to comprehensive GitHub documentation
+- **Comprehensive help documentation** (HELP.md) in Docs/ directory with:
+  - Complete user interface overview
+  - Step-by-step usage instructions
+  - Keyboard shortcuts reference
+  - Troubleshooting guide
+  - Advanced features documentation
+  - Tips and best practices
+- Web browser integration for opening GitHub-hosted documentation
+- Error handling and fallback instructions if browser fails to open
 
 ### Changed
 - Default application startup mode changed from single-page to two-page view
