@@ -247,7 +247,7 @@ class GuiLess(QMainWindow):
     def __init__(self):
         super().__init__()
         self.current_file = None
-        self.two_page_mode = False
+        self.two_page_mode = True  # Default to two page mode
         self.current_left_page = 1
         
         # Recent files management
@@ -333,6 +333,7 @@ class GuiLess(QMainWindow):
         
         self.two_page_action = QAction('Two Page Mode', self)
         self.two_page_action.setCheckable(True)
+        self.two_page_action.setChecked(True)  # Default to checked
         self.two_page_action.triggered.connect(self.toggle_two_page_mode)
         edit_menu.addAction(self.two_page_action)
         
@@ -400,8 +401,8 @@ class GuiLess(QMainWindow):
         # Add first text editor
         self.splitter.addWidget(self.text_edit_1)
         
-        # Initially hide second editor
-        self.text_edit_2.hide()
+        # Add second editor for two-page mode (default)
+        self.splitter.addWidget(self.text_edit_2)
         
         layout.addWidget(self.splitter)
         
@@ -424,6 +425,11 @@ class GuiLess(QMainWindow):
         nav_layout.addWidget(self.page_info_label)
         nav_layout.addStretch()
         nav_layout.addWidget(self.next_page_btn)
+        
+        # Show navigation controls by default (two-page mode)
+        self.prev_page_btn.show()
+        self.next_page_btn.show()
+        self.page_info_label.show()
         
         layout.addLayout(nav_layout)
     
