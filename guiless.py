@@ -7,6 +7,7 @@ Built with PyQt5 for enhanced text viewing with modern interface features
 import sys
 import os
 import json
+import webbrowser
 from pathlib import Path
 from PyQt5.QtWidgets import (QDialog, QLineEdit, QPushButton, QDialogButtonBox,
     QApplication, QMainWindow, QTextEdit, QVBoxLayout, QHBoxLayout,
@@ -348,6 +349,12 @@ class GuiLess(QMainWindow):
         
         # Help menu
         help_menu = menubar.addMenu('Help')
+        
+        user_guide_action = QAction('User Guide', self)
+        user_guide_action.triggered.connect(self.open_user_guide)
+        help_menu.addAction(user_guide_action)
+        
+        help_menu.addSeparator()
         
         about_action = QAction('About', self)
         about_action.triggered.connect(self.show_about)
@@ -776,6 +783,24 @@ class GuiLess(QMainWindow):
         line = cursor.blockNumber() + 1
         col = cursor.columnNumber() + 1
         self.line_col_label.setText(f"Line: {line}, Col: {col}")
+    
+    def open_user_guide(self):
+        """Open the user guide in the default web browser"""
+        # GitHub URL for the help documentation
+        # TODO: Update this URL when the repository is published on GitHub
+        github_help_url = "https://github.com/YOUR_USERNAME/guiless/blob/main/Docs/HELP.md"
+        
+        try:
+            webbrowser.open(github_help_url)
+            self.status_bar.showMessage("Opening User Guide in web browser...", 3000)
+        except Exception as e:
+            QMessageBox.warning(
+                self, "Error Opening User Guide",
+                f"Could not open the User Guide in your web browser.\n\n"
+                f"Please visit the following URL manually:\n"
+                f"{github_help_url}\n\n"
+                f"Error: {str(e)}"
+            )
     
     def show_about(self):
         """Show about dialog"""
