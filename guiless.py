@@ -253,8 +253,9 @@ class GuiLess(QMainWindow):
         # Recent files management
         self.max_recent_files = 10
         self.recent_files = []
+        self.last_directory = str(Path.home())  # Default to home directory
         self.config_dir = Path.home() / '.guiless'
-        self.config_file = self.config_dir / 'recent_files.json'
+        self.config_file = self.config_dir / 'config.json'
         
         # Load recent files and initialize UI
         self.load_recent_files()
@@ -466,28 +467,46 @@ class GuiLess(QMainWindow):
             self.addAction(action)
     
     def load_recent_files(self):
-        """Load recent files list from config file"""
+        """Load recent files list and last directory from config file"""
         try:
             if self.config_file.exists():
                 with open(self.config_file, 'r') as f:
-                    self.recent_files = json.load(f)
+                    config_data = json.load(f)
+                    
+                # Handle both old format (list) and new format (dict)
+                if isinstance(config_data, list):
+                    # Old format - just recent files
+                    self.recent_files = config_data
+                    self.last_directory = str(Path.home())  # Default
+                else:
+                    # New format - dict with recent_files and last_directory
+                    self.recent_files = config_data.get('recent_files', [])
+                    self.last_directory = config_data.get('last_directory', str(Path.home()))
+                    
                 # Remove files that no longer exist
                 self.recent_files = [f for f in self.recent_files if os.path.exists(f)]
             else:
                 self.recent_files = []
+                self.last_directory = str(Path.home())
         except (json.JSONDecodeError, IOError):
             self.recent_files = []
+            self.last_directory = str(Path.home())
     
     def save_recent_files(self):
-        """Save recent files list to config file"""
+        """Save recent files list and last directory to config file"""
         try:
             # Create config directory if it doesn't exist
             self.config_dir.mkdir(exist_ok=True)
             
+            config_data = {
+                'recent_files': self.recent_files,
+                'last_directory': self.last_directory
+            }
+            
             with open(self.config_file, 'w') as f:
-                json.dump(self.recent_files, f, indent=2)
+                json.dump(config_data, f, indent=2)
         except IOError as e:
-            print(f"Warning: Could not save recent files: {e}")
+            print(f"Warning: Could not save config: {e}")
     
     def add_recent_file(self, file_path):
         """Add a file to the recent files list"""
@@ -543,6 +562,8 @@ class GuiLess(QMainWindow):
         if os.path.exists(file_path):
             if self.text_edit_1.load_file(file_path):
                 self.current_file = file_path
+                # Update last directory when opening recent file
+                self.last_directory = str(Path(file_path).parent)
                 self.setWindowTitle(f"GUI Less - {os.path.basename(file_path)}")
                 self.status_bar.showMessage(f"Loaded: {file_path}")
                 
@@ -582,12 +603,14 @@ class GuiLess(QMainWindow):
     def open_file(self):
         """Open a file dialog and load selected file"""
         file_path, _ = QFileDialog.getOpenFileName(
-            self, "Open Text File", "", "Text Files (*.txt);;All Files (*)"
+            self, "Open Text File", self.last_directory, "Text Files (*.txt);;All Files (*)"
         )
         
         if file_path:
             if self.text_edit_1.load_file(file_path):
                 self.current_file = file_path
+                # Update last directory
+                self.last_directory = str(Path(file_path).parent)
                 self.setWindowTitle(f"GUI Less - {os.path.basename(file_path)}")
                 self.status_bar.showMessage(f"Loaded: {file_path}")
                 
