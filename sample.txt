@@ -1,0 +1,185 @@
+GUI Less - Sample Text File
+==============================
+
+This is a sample text file to demonstrate the GUI Less application.
+You can use this file to test various features of the application.
+
+Features to Test:
+-----------------
+
+1. Basic Text Viewing
+   - This text should display clearly in a monospace font
+   - Line wrapping should be disabled by default
+   - Text should be read-only (no editing allowed)
+
+2. Zoom Functionality
+   - Use Ctrl+Scroll wheel to zoom in and out
+   - Try the zoom buttons in the toolbar
+   - Use Ctrl+0 to reset zoom to default
+
+3. Word Wrap Feature
+   - Word wrap is enabled by default for better readability
+   - Toggle word wrap on/off from Edit menu or toolbar
+   - Use 'w' key to quickly toggle word wrap
+   - Notice how long lines wrap to fit the window width
+   - Works in both single and two-page modes
+
+4. Line Numbers
+   - Toggle line numbers on/off from the Edit menu
+   - Notice how line numbers are right-aligned
+   - Line numbers should adjust width based on total lines
+   - Line numbers work correctly with word wrap enabled
+
+5. Two-Page Mode
+   - Toggle two-page mode from the Edit menu
+   - Text flows from left page to right page like a book
+   - Pages display as 1-2, then 2-3, then 3-4, etc.
+   - Use "Previous Pages" and "Next Pages" buttons to navigate
+   - Use Space and 'b' keys for keyboard navigation
+   - Zoom should work on both pages simultaneously
+
+6. Find Functionality
+   - Use Ctrl+F or Edit > Find to search for text
+   - Try searching for "zoom" or "test"
+   - Check the status bar for search results
+
+7. Single-Page Navigation
+   - Use arrow keys and Page Up/Page Down to navigate
+   - Try the scroll wheel for vertical scrolling
+   - Use Ctrl+Home/End to go to beginning/end of file
+
+8. Two-Page Navigation
+   - Enable two-page mode first
+   - Use Space bar to advance to next page pair
+   - Use 'b' key to go back to previous page pair
+   - Watch the page indicator (e.g., "Pages 1-2 of 8")
+
+9. Keyboard Shortcuts
+   - Press 'q' to quit (less-style)
+   - Press '?' to open find dialog (less-style)
+   - Use Ctrl+O to open another file
+   - In two-page mode: Space for next pages, 'b' for previous pages
+   - Use 'w' to toggle word wrap on/off
+
+Word Wrap Demonstration:
+=======================
+
+The following section contains long lines to demonstrate word wrapping:
+
+This is a very long line that should wrap around when word wrap is enabled. When word wrap is disabled, this line will extend beyond the right edge of the window and you'll need to scroll horizontally to see the entire content. Toggle word wrap using the Edit menu, toolbar button, or the 'w' keyboard shortcut.
+
+Here's another extremely long line that contains a lot of text to show how the word wrapping feature works in practice. You can see how the text flows naturally from one line to the next when word wrap is enabled, making it much easier to read long paragraphs without horizontal scrolling.
+
+Lorem Ipsum Section:
+-------------------
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.
+
+Code Example Section:
+--------------------
+
+#!/usr/bin/env python3
+def hello_world():
+    """A simple hello world function"""
+    print("Hello, World!")
+    return "success"
+
+if __name__ == "__main__":
+    result = hello_world()
+    print(f"Function returned: {result}")
+
+Special Characters:
+------------------
+
+• Bullet points
+✓ Check marks
+✗ X marks
+→ Arrows
+© Copyright symbol
+® Registered trademark
+™ Trademark
+
+Table Example:
+--------------
+
+Name        | Age | City
+------------|-----|------------
+John Doe    | 30  | New York
+Jane Smith  | 25  | Los Angeles
+Bob Johnson | 35  | Chicago
+
+This file contains enough content to test scrolling, searching, and all
+the various features of the GUI Less application. The text includes
+different types of content like headers, code, special characters, and
+formatted sections to ensure the application handles various text
+patterns correctly.
+
+Testing Two-Page Mode:
+=====================
+
+This file is designed to demonstrate the two-page pagination feature.
+When you enable two-page mode, you'll see pages side by side.
+
+Page Flow Example:
+- Pages 1-2 will show the beginning of this file
+- Pages 2-3 will show page 2 plus the next page
+- Pages 3-4 will continue the flow
+- And so on through the document
+
+The pagination automatically adjusts based on:
+- Window size
+- Font size (zoom level)
+- Word wrap setting (affects line count)
+- Number of lines that fit in the viewport
+
+Try these actions in two-page mode:
+1. Use the "Next Pages" and "Previous Pages" buttons
+2. Press Space bar to advance pages
+3. Press 'b' to go back pages
+4. Zoom in/out and watch pagination recalculate
+5. Resize the window to see pagination adjust
+6. Toggle line numbers on/off
+7. Try toggling word wrap with 'w' key - notice how pagination changes
+
+Additional Test Content:
+======================
+
+Line 128
+Line 129
+Line 130
+Line 131
+Line 132
+Line 133
+Line 134
+Line 135
+Line 136
+Line 137
+Line 138
+Line 139
+Line 140
+Line 141
+Line 142
+Line 143
+Line 144
+Line 145
+Line 146
+Line 147
+Line 148
+Line 149
+Line 150
+
+Testing Long Lines Without Word Wrap:
+===================================
+
+The following lines are intentionally very long to test horizontal scrolling when word wrap is disabled:
+
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+
+This is a sentence with mixed content and a very long URL like https://example.com/very/long/path/to/some/resource/that/would/normally/extend/beyond/the/screen/width/and/require/horizontal/scrolling/when/word/wrap/is/disabled/but/should/wrap/nicely/when/word/wrap/is/enabled
+
+End of sample file. You can create your own test files to further explore the capabilities of GUI Less!
+

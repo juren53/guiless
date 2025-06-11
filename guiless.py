@@ -1,0 +1,658 @@
+#!/usr/bin/env python3
+"""
+GUI Less - A GUI version of the less utility
+Built with PyQt5 for enhanced text viewing with modern interface features
+"""
+
+import sys
+import os
+from PyQt5.QtWidgets import (QDialog, QLineEdit, QPushButton, QDialogButtonBox, 
+    QApplication, QMainWindow, QTextEdit, QVBoxLayout, QHBoxLayout,
+    QWidget, QMenuBar, QAction, QFileDialog, QMessageBox, QSplitter,
+    QCheckBox, QLabel, QToolBar, QStatusBar
+)
+from PyQt5.QtCore import Qt, QTimer, pyqtSignal
+from PyQt5.QtGui import QFont, QKeySequence, QTextCursor, QTextDocument, QTextCharFormat, QColor
+
+
+class FindDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Find")
+        self.setFixedSize(300, 100)
+
+        self.layout = QVBoxLayout(self)
+        self.find_input = QLineEdit(self)
+        self.layout.addWidget(self.find_input)
+
+        self.button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
+        self.button_box.accepted.connect(self.accept)
+        self.button_box.rejected.connect(self.reject)
+        self.layout.addWidget(self.button_box)
+
+    def text(self):
+        return self.find_input.text()
+
+class LessTextEdit(QTextEdit):
+    """Custom QTextEdit with less-like functionality and zoom support"""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setReadOnly(True)
+        # Line wrap will be set after word_wrap_enabled is initialized
+        
+        # Set up font
+        font = QFont("Courier New", 10)
+        font.setFixedPitch(True)
+        self.setFont(font)
+        
+        # Track original font size for zooming
+        self.base_font_size = 10
+        self.zoom_factor = 1.0
+        
+        # Line numbering state
+        self.show_line_numbers = False
+        
+        # Word wrap state
+        self.word_wrap_enabled = True  # Enable word wrap by default
+        self.setLineWrapMode(QTextEdit.WidgetWidth if self.word_wrap_enabled else QTextEdit.NoWrap)
+        
+        # Pagination support
+        self.original_content = ""
+        self.current_page = 1
+        self.lines_per_page = 0
+        self.total_pages = 0
+        
+    def wheelEvent(self, event):
+        """Handle Ctrl+Scroll wheel for zooming"""
+        if event.modifiers() & Qt.ControlModifier:
+            # Zoom in/out with Ctrl+Scroll
+            delta = event.angleDelta().y()
+            if delta > 0:
+                self.zoom_in()
+            else:
+                self.zoom_out()
+            event.accept()
+        else:
+            # Normal scrolling
+            super().wheelEvent(event)
+    
+    def zoom_in(self):
+        """Increase font size"""
+        self.zoom_factor *= 1.1
+        self.update_font_size()
+    
+    def zoom_out(self):
+        """Decrease font size"""
+        self.zoom_factor /= 1.1
+        self.update_font_size()
+    
+    def reset_zoom(self):
+        """Reset zoom to default"""
+        self.zoom_factor = 1.0
+        self.update_font_size()
+    
+    def update_font_size(self):
+        """Update font size based on zoom factor"""
+        new_size = int(self.base_font_size * self.zoom_factor)
+        font = self.font()
+        font.setPointSize(new_size)
+        self.setFont(font)
+    
+    def load_file(self, file_path):
+        """Load and display a text file"""
+        try:
+            with open(file_path, 'r', encoding='utf-8', errors='replace') as file:
+                content = file.read()
+                self.original_content = content
+                self.setPlainText(content)
+                self.calculate_pagination()
+                return True
+        except Exception as e:
+            QMessageBox.critical(self.parent(), "Error", f"Failed to open file: {str(e)}")
+            return False
+    
+    def calculate_pagination(self):
+        """Calculate how many lines fit per page"""
+        if not self.original_content:
+            return
+            
+        # Get viewport height and font metrics
+        viewport_height = self.viewport().height()
+        font_metrics = self.fontMetrics()
+        line_height = font_metrics.lineSpacing()
+        
+        # Calculate lines per page (subtract some for margins)
+        self.lines_per_page = max(1, (viewport_height - 20) // line_height)
+        
+        # Calculate total pages based on word wrap mode
+        if self.word_wrap_enabled:
+            # For word wrap, we need to count visual lines, not just text lines
+            self.calculate_wrapped_pagination()
+        else:
+            # Simple line-based pagination for no-wrap mode
+            total_lines = len(self.original_content.split('\n'))
+            self.total_pages = max(1, (total_lines + self.lines_per_page - 1) // self.lines_per_page)
+    
+    def calculate_wrapped_pagination(self):
+        """Calculate pagination when word wrap is enabled - simplified"""
+        # For word wrap mode, use same pagination as no-wrap mode
+        # The wrapping will happen naturally in the display
+        # This is simpler and more reliable than trying to calculate visual lines
+        total_lines = len(self.original_content.split('\n'))
+        self.total_pages = max(1, (total_lines + self.lines_per_page - 1) // self.lines_per_page)
+    
+    def set_page_content(self, page_number):
+        """Set content for a specific page"""
+        if not self.original_content or page_number < 1:
+            return
+            
+        self.current_page = page_number
+        
+        if self.word_wrap_enabled:
+            self.set_wrapped_page_content(page_number)
+        else:
+            self.set_nowrap_page_content(page_number)
+    
+    def set_nowrap_page_content(self, page_number):
+        """Set page content for no-wrap mode"""
+        lines = self.original_content.split('\n')
+        
+        # Calculate start and end lines for this page
+        start_line = (page_number - 1) * self.lines_per_page
+        end_line = min(start_line + self.lines_per_page, len(lines))
+        
+        # Get page content
+        if start_line < len(lines):
+            page_lines = lines[start_line:end_line]
+            page_content = '\n'.join(page_lines)
+        else:
+            page_content = ""  # Beyond end of document
+        
+        # Apply line numbers if enabled
+        if self.show_line_numbers and page_content:
+            numbered_lines = []
+            total_lines = len(lines)
+            width = len(str(total_lines))
+            
+            for i, line in enumerate(page_lines, start_line + 1):
+                line_num = str(i).rjust(width)
+                numbered_lines.append(f"{line_num}: {line}")
+            
+            page_content = '\n'.join(numbered_lines)
+        
+        self.setPlainText(page_content)
+    
+    def set_wrapped_page_content(self, page_number):
+        """Set page content for word wrap mode - simplified approach"""
+        # For word wrap mode, we'll use a simpler approach
+        # Just show the appropriate portion of content and let Qt handle wrapping
+        
+        # Apply line numbers to original content if needed
+        content_to_display = self.original_content
+        if self.show_line_numbers:
+            lines = self.original_content.split('\n')
+            numbered_lines = []
+            total_lines = len(lines)
+            width = len(str(total_lines))
+            
+            for i, line in enumerate(lines, 1):
+                line_num = str(i).rjust(width)
+                numbered_lines.append(f"{line_num}: {line}")
+            
+            content_to_display = '\n'.join(numbered_lines)
+        
+        # Simple pagination based on text lines (not visual lines)
+        # This is a compromise - true visual line pagination is complex
+        lines = content_to_display.split('\n')
+        start_line = (page_number - 1) * self.lines_per_page
+        end_line = min(start_line + self.lines_per_page, len(lines))
+        
+        if start_line < len(lines):
+            page_content = '\n'.join(lines[start_line:end_line])
+            self.setPlainText(page_content)
+        else:
+            self.setPlainText("")
+    
+    def resizeEvent(self, event):
+        """Recalculate pagination when window is resized"""
+        super().resizeEvent(event)
+        if hasattr(self, 'original_content') and self.original_content:
+            self.calculate_pagination()
+            # Re-display current page with new pagination
+            self.set_page_content(self.current_page)
+    
+    def toggle_line_numbers(self, show):
+        """Toggle line number display"""
+        self.show_line_numbers = show
+        # Re-display current page to apply/remove line numbers
+        self.set_page_content(self.current_page)
+    
+    def toggle_word_wrap(self, enable):
+        """Toggle word wrap mode"""
+        self.word_wrap_enabled = enable
+        self.setLineWrapMode(QTextEdit.WidgetWidth if enable else QTextEdit.NoWrap)
+        
+        # Recalculate pagination and refresh display
+        if hasattr(self, 'original_content') and self.original_content:
+            self.calculate_pagination()
+            self.set_page_content(self.current_page)
+
+
+class GuiLess(QMainWindow):
+    """Main GUI Less application window"""
+    
+    def __init__(self):
+        super().__init__()
+        self.current_file = None
+        self.two_page_mode = False
+        self.current_left_page = 1
+        
+        self.init_ui()
+    
+    def init_ui(self):
+        """Initialize the user interface"""
+        self.setWindowTitle("GUI Less - Text Viewer")
+        self.setGeometry(100, 100, 1000, 700)
+        
+        # Create central widget
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+        
+        # Create layout
+        layout = QVBoxLayout(central_widget)
+        
+        # Create menu bar
+        self.create_menu_bar()
+        
+        # Create toolbar
+        self.create_toolbar()
+        
+        # Create main content area
+        self.create_content_area(layout)
+        
+        # Create status bar
+        self.create_status_bar()
+        
+        # Set up keyboard shortcuts
+        self.setup_shortcuts()
+    
+    def create_menu_bar(self):
+        """Create the menu bar"""
+        menubar = self.menuBar()
+        
+        # File menu
+        file_menu = menubar.addMenu('File')
+        
+        open_action = QAction('Open...', self)
+        open_action.setShortcut(QKeySequence.Open)
+        open_action.triggered.connect(self.open_file)
+        file_menu.addAction(open_action)
+        
+        file_menu.addSeparator()
+        
+        exit_action = QAction('Exit', self)
+        exit_action.setShortcut(QKeySequence.Quit)
+        exit_action.triggered.connect(self.close)
+        file_menu.addAction(exit_action)
+        
+        # Edit menu
+        edit_menu = menubar.addMenu('Edit')
+        
+        find_action = QAction('Find...', self)
+        find_action.setShortcut(QKeySequence.Find)
+        find_action.triggered.connect(self.find_text)
+        edit_menu.addAction(find_action)
+        
+        edit_menu.addSeparator()
+        
+        # View options
+        self.line_numbers_action = QAction('Show Line Numbers', self)
+        self.line_numbers_action.setCheckable(True)
+        self.line_numbers_action.triggered.connect(self.toggle_line_numbers)
+        edit_menu.addAction(self.line_numbers_action)
+        
+        self.two_page_action = QAction('Two Page Mode', self)
+        self.two_page_action.setCheckable(True)
+        self.two_page_action.triggered.connect(self.toggle_two_page_mode)
+        edit_menu.addAction(self.two_page_action)
+        
+        edit_menu.addSeparator()
+        
+        self.word_wrap_action = QAction('Word Wrap', self)
+        self.word_wrap_action.setCheckable(True)
+        self.word_wrap_action.setChecked(True)  # Default to enabled
+        self.word_wrap_action.triggered.connect(self.toggle_word_wrap)
+        edit_menu.addAction(self.word_wrap_action)
+        
+        # Help menu
+        help_menu = menubar.addMenu('Help')
+        
+        about_action = QAction('About', self)
+        about_action.triggered.connect(self.show_about)
+        help_menu.addAction(about_action)
+    
+    def create_toolbar(self):
+        """Create the toolbar"""
+        toolbar = QToolBar()
+        self.addToolBar(toolbar)
+        
+        # Open file button
+        open_action = QAction('Open', self)
+        open_action.triggered.connect(self.open_file)
+        toolbar.addAction(open_action)
+        
+        toolbar.addSeparator()
+        
+        # Zoom controls
+        zoom_in_action = QAction('Zoom In', self)
+        zoom_in_action.setShortcut('Ctrl+=')
+        zoom_in_action.triggered.connect(self.zoom_in)
+        toolbar.addAction(zoom_in_action)
+        
+        zoom_out_action = QAction('Zoom Out', self)
+        zoom_out_action.setShortcut('Ctrl+-')
+        zoom_out_action.triggered.connect(self.zoom_out)
+        toolbar.addAction(zoom_out_action)
+        
+        zoom_reset_action = QAction('Reset Zoom', self)
+        zoom_reset_action.setShortcut('Ctrl+0')
+        zoom_reset_action.triggered.connect(self.reset_zoom)
+        toolbar.addAction(zoom_reset_action)
+        
+        toolbar.addSeparator()
+        
+        # Word wrap toggle
+        word_wrap_action = QAction('Word Wrap', self)
+        word_wrap_action.setCheckable(True)
+        word_wrap_action.setChecked(True)
+        word_wrap_action.triggered.connect(self.toggle_word_wrap)
+        toolbar.addAction(word_wrap_action)
+    
+    def create_content_area(self, layout):
+        """Create the main content viewing area"""
+        # Create splitter for potential two-page mode
+        self.splitter = QSplitter(Qt.Horizontal)
+        
+        # Create text editors
+        self.text_edit_1 = LessTextEdit()  # Left page
+        self.text_edit_2 = LessTextEdit()  # Right page
+        
+        # Add first text editor
+        self.splitter.addWidget(self.text_edit_1)
+        
+        # Initially hide second editor
+        self.text_edit_2.hide()
+        
+        layout.addWidget(self.splitter)
+        
+        # Create navigation controls for two-page mode
+        nav_layout = QHBoxLayout()
+        
+        self.prev_page_btn = QPushButton("Previous Pages")
+        self.prev_page_btn.clicked.connect(self.previous_pages)
+        self.prev_page_btn.hide()
+        
+        self.next_page_btn = QPushButton("Next Pages")
+        self.next_page_btn.clicked.connect(self.next_pages)
+        self.next_page_btn.hide()
+        
+        self.page_info_label = QLabel("")
+        self.page_info_label.hide()
+        
+        nav_layout.addWidget(self.prev_page_btn)
+        nav_layout.addStretch()
+        nav_layout.addWidget(self.page_info_label)
+        nav_layout.addStretch()
+        nav_layout.addWidget(self.next_page_btn)
+        
+        layout.addLayout(nav_layout)
+    
+    def create_status_bar(self):
+        """Create the status bar"""
+        self.status_bar = QStatusBar()
+        self.setStatusBar(self.status_bar)
+        
+        # Add permanent widgets to status bar
+        self.line_col_label = QLabel("Line: 1, Col: 1")
+        self.status_bar.addPermanentWidget(self.line_col_label)
+        
+        # Connect cursor position updates
+        self.text_edit_1.cursorPositionChanged.connect(self.update_cursor_position)
+    
+    def setup_shortcuts(self):
+        """Set up keyboard shortcuts similar to less"""
+        # Navigation shortcuts (less-like)
+        shortcuts = {
+            'q': self.close,  # Quit
+            'Ctrl+C': self.close,  # Alternative quit
+            '?': self.find_text,  # Search
+            'n': self.find_next,  # Find next
+            'N': self.find_previous,  # Find previous
+            'Space': self.next_pages,  # Next pages (like less)
+            'b': self.previous_pages,  # Previous pages (like less)
+            'w': self.toggle_word_wrap,  # Toggle word wrap
+        }
+        
+        for key, func in shortcuts.items():
+            action = QAction(self)
+            action.setShortcut(key)
+            action.triggered.connect(func)
+            self.addAction(action)
+    
+    def open_file(self):
+        """Open a file dialog and load selected file"""
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "Open Text File", "", "Text Files (*.txt);;All Files (*)"
+        )
+        
+        if file_path:
+            if self.text_edit_1.load_file(file_path):
+                self.current_file = file_path
+                self.setWindowTitle(f"GUI Less - {os.path.basename(file_path)}")
+                self.status_bar.showMessage(f"Loaded: {file_path}")
+                
+                # If in two-page mode, set up pagination
+                if self.two_page_mode:
+                    self.setup_two_page_display()
+    
+    def toggle_line_numbers(self):
+        """Toggle line number display"""
+        show = self.line_numbers_action.isChecked()
+        self.text_edit_1.toggle_line_numbers(show)
+        if self.two_page_mode:
+            self.text_edit_2.toggle_line_numbers(show)
+    
+    def toggle_word_wrap(self):
+        """Toggle word wrap mode"""
+        enable = self.word_wrap_action.isChecked()
+        self.text_edit_1.toggle_word_wrap(enable)
+        if self.two_page_mode:
+            self.text_edit_2.toggle_word_wrap(enable)
+            # Update page display after wrap mode change
+            self.update_page_display()
+    
+    def toggle_two_page_mode(self):
+        """Toggle between single and two-page mode"""
+        self.two_page_mode = self.two_page_action.isChecked()
+        
+        if self.two_page_mode:
+            # Show second editor and navigation
+            self.splitter.addWidget(self.text_edit_2)
+            self.text_edit_2.show()
+            self.prev_page_btn.show()
+            self.next_page_btn.show()
+            self.page_info_label.show()
+            
+            # Set up pagination if file is loaded
+            if self.current_file:
+                self.setup_two_page_display()
+            
+            # Split equally
+            self.splitter.setSizes([500, 500])
+        else:
+            # Hide second editor and navigation
+            self.text_edit_2.hide()
+            self.prev_page_btn.hide()
+            self.next_page_btn.hide()
+            self.page_info_label.hide()
+            
+            # Return to full document view
+            if self.current_file:
+                if self.text_edit_1.word_wrap_enabled:
+                    self.text_edit_1.setPlainText(self.text_edit_1.original_content)
+                else:
+                    self.text_edit_1.setPlainText(self.text_edit_1.original_content)
+    
+    def setup_two_page_display(self):
+        """Set up the two-page display with proper pagination"""
+        if not self.current_file:
+            return
+            
+        # Load content into both editors for pagination calculation
+        self.text_edit_2.original_content = self.text_edit_1.original_content
+        # Sync word wrap settings
+        self.text_edit_2.word_wrap_enabled = self.text_edit_1.word_wrap_enabled
+        self.text_edit_2.setLineWrapMode(self.text_edit_1.lineWrapMode())
+        self.text_edit_2.calculate_pagination()
+        
+        # Start with pages 1 and 2
+        self.current_left_page = 1
+        self.update_page_display()
+    
+    def update_page_display(self):
+        """Update the display for current left and right pages"""
+        if not self.two_page_mode:
+            return
+            
+        left_page = self.current_left_page
+        right_page = self.current_left_page + 1
+        
+        # Set content for left page
+        self.text_edit_1.set_page_content(left_page)
+        
+        # Set content for right page
+        self.text_edit_2.set_page_content(right_page)
+        
+        # Update page info
+        total_pages = max(self.text_edit_1.total_pages, 1)
+        if right_page <= total_pages:
+            self.page_info_label.setText(f"Pages {left_page}-{right_page} of {total_pages}")
+        else:
+            self.page_info_label.setText(f"Page {left_page} of {total_pages}")
+        
+        # Enable/disable navigation buttons
+        self.prev_page_btn.setEnabled(left_page > 1)
+        self.next_page_btn.setEnabled(left_page < total_pages)
+    
+    def previous_pages(self):
+        """Go to previous pair of pages"""
+        if self.current_left_page > 1:
+            self.current_left_page = max(1, self.current_left_page - 2)
+            self.update_page_display()
+    
+    def next_pages(self):
+        """Go to next pair of pages"""
+        total_pages = max(self.text_edit_1.total_pages, 1)
+        if self.current_left_page < total_pages:
+            self.current_left_page = min(total_pages, self.current_left_page + 2)
+            self.update_page_display()
+    
+    def zoom_in(self):
+        """Zoom in on text"""
+        self.text_edit_1.zoom_in()
+        if self.two_page_mode:
+            self.text_edit_2.zoom_in()
+            # Recalculate pagination after zoom change
+            self.update_page_display()
+    
+    def zoom_out(self):
+        """Zoom out on text"""
+        self.text_edit_1.zoom_out()
+        if self.two_page_mode:
+            self.text_edit_2.zoom_out()
+            # Recalculate pagination after zoom change
+            self.update_page_display()
+    
+    def reset_zoom(self):
+        """Reset zoom to default"""
+        self.text_edit_1.reset_zoom()
+        if self.two_page_mode:
+            self.text_edit_2.reset_zoom()
+            # Recalculate pagination after zoom change
+            self.update_page_display()
+    
+    def find_text(self):
+        """Open find dialog"""
+        dialog = FindDialog(self)
+        if dialog.exec_() == QDialog.Accepted:
+            search_term = dialog.text()
+            if search_term:
+                cursor = self.text_edit_1.textCursor()
+                cursor.movePosition(QTextCursor.Start)
+                
+                if cursor.find(search_term):
+                    self.text_edit_1.setTextCursor(cursor)
+                    self.status_bar.showMessage(f"Found: {search_term}", 2000)
+                else:
+                    self.status_bar.showMessage("No matches found.", 2000)
+    
+    def find_next(self):
+        """Find next occurrence (placeholder)"""
+        pass
+    
+    def find_previous(self):
+        """Find previous occurrence (placeholder)"""
+        pass
+    
+    def update_cursor_position(self):
+        """Update cursor position in status bar"""
+        cursor = self.text_edit_1.textCursor()
+        line = cursor.blockNumber() + 1
+        col = cursor.columnNumber() + 1
+        self.line_col_label.setText(f"Line: {line}, Col: {col}")
+    
+    def show_about(self):
+        """Show about dialog"""
+        QMessageBox.about(
+            self, "About GUI Less",
+            "GUI Less v1.0\n\n"
+            "A GUI version of the less utility built with PyQt5.\n\n"
+            "Features:\n"
+            "• File viewing with syntax similar to less\n"
+            "• Two-page mode with proper page flow\n"
+            "• Ctrl+Scroll wheel zooming\n"
+            "• Page navigation (Space/b for next/previous)\n"
+            "• Optional line numbering\n"
+            "• Toggleable word wrap for long lines\n"
+            "• Keyboard shortcuts compatible with less"
+        )
+
+
+def main():
+    """Main application entry point"""
+    app = QApplication(sys.argv)
+    
+    # Handle command line arguments
+    if len(sys.argv) > 1:
+        file_path = sys.argv[1]
+        if os.path.exists(file_path):
+            window = GuiLess()
+            window.show()
+            # Load the file specified on command line
+            if window.text_edit_1.load_file(file_path):
+                window.current_file = file_path
+                window.setWindowTitle(f"GUI Less - {os.path.basename(file_path)}")
+        else:
+            print(f"Error: File '{file_path}' not found.")
+            sys.exit(1)
+    else:
+        window = GuiLess()
+        window.show()
+    
+    sys.exit(app.exec_())
+
+
+if __name__ == '__main__':
+    main()
+
