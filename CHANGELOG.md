@@ -8,12 +8,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Recent Files menu with automatic tracking of recently opened files
+- Auto-load functionality - most recent file loads automatically on startup
+- Fullscreen mode by default for optimal viewing experience
+- Keyboard shortcuts for recent files (Ctrl+1 through Ctrl+9)
+- Configuration storage in ~/.guiless/ directory
+- "Clear Recent Files" option in File menu
+- Automatic cleanup of non-existent files from recent list
 - Git repository initialization for version control
 - Comprehensive .gitignore file for Python projects
 - CHANGELOG.md for tracking project changes
 - CONTRIBUTING.md with collaboration guidelines and development workflow
 - MIT LICENSE file for open source distribution
 - Git tags for version tracking (v1.0.0)
+
+## [1.1.0] - 2025-06-11
+
+### Added
+- Recent Files functionality with up to 10 file tracking
+- Auto-load most recent file when no command-line argument provided
+- Fullscreen mode by default for better viewing experience
+- Recent Files submenu in File menu with keyboard shortcuts
+- Configuration file storage in user's home directory (~/.guiless/)
+- "Clear Recent Files" option with confirmation dialog
+- Automatic removal of non-existent files from recent list
+- Keyboard shortcuts Ctrl+1 through Ctrl+9 for recent file access
+- JSON-based configuration storage system
+- Improved startup behavior and user experience
+
+### Enhanced
+- File menu now includes Recent Files submenu
+- Better file management with persistent recent file tracking
+- Improved application startup with intelligent file loading
+- Enhanced user interface with fullscreen default
+
+### Technical
+- Added JSON configuration management
+- Implemented pathlib for cross-platform file handling
+- Added proper error handling for configuration file operations
+- Enhanced main() function with improved startup logic
 
 ## [1.0.0] - 2025-06-11
 
@@ -75,7 +108,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
-- **v1.0.0**: Full-featured GUI Less application with two-page mode, word wrap, and all requested features
+- **v1.1.0**: Added recent files, auto-load, and fullscreen features for enhanced user experience
+- **v1.0.0**: Full-featured GUI Less application with two-page mode, word wrap, and core functionality
 - **v0.1.0**: Initial development version
 
 ## Future Roadmap
@@ -85,10 +119,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Syntax highlighting for code files
 - Bookmark/navigation features
 - Printing support
-- Configuration/preferences system
+- Expanded configuration/preferences system
 - Better page break detection for natural pagination
 - Advanced word wrap options (soft wrap, smart breaks)
 - Performance optimization for very large files
+- Recent files organization and management
+- Configurable auto-load behavior
 
 ### Potential Enhancements
 - Plugin system for custom file format support

@@ -12,6 +12,9 @@ A modern graphical interface version of the Unix `less` command-line utility, bu
 - **Line Numbers**: Toggle line numbering on/off
 - **Two-Page Mode**: Proper book-style pagination with text flow from left to right page
 - **Word Wrap**: Toggle word wrapping for long lines (enabled by default)
+- **Recent Files**: Track and quickly access recently opened files
+- **Auto-Load**: Automatically loads the most recent file on startup
+- **Fullscreen Mode**: Launches in fullscreen by default for optimal viewing
 
 ### GUI Features
 - **Menu Bar**: File, Edit, and Help menus
@@ -34,7 +37,7 @@ pip install -r requirements.txt
 
 ### Running the Application
 
-**Without a file (open file dialog):**
+**Without a file (auto-loads most recent):**
 ```bash
 python guiless.py
 ```
@@ -55,6 +58,7 @@ python guiless.py filename.txt
 - `Space` - Next pages (in two-page mode)
 - `b` - Previous pages (in two-page mode)
 - `w` - Toggle word wrap
+- `Ctrl+1` to `Ctrl+9` - Open recent files (1st to 9th most recent)
 
 #### Standard GUI shortcuts:
 - `Ctrl+O` - Open file
@@ -68,6 +72,7 @@ python guiless.py filename.txt
 
 #### File Menu
 - **Open...** - Open a text file
+- **Recent Files** - Submenu with recently opened files
 - **Exit** - Close the application
 
 #### Edit Menu
@@ -101,6 +106,20 @@ python guiless.py filename.txt
 - Automatically recalculates pagination when toggled
 - Accessible via menu, toolbar, or 'w' keyboard shortcut
 
+### Recent Files
+- Automatically tracks up to 10 most recently opened files
+- Accessible via File → Recent Files menu
+- Keyboard shortcuts Ctrl+1 through Ctrl+9 for quick access
+- Files that no longer exist are automatically removed from the list
+- "Clear Recent Files" option to reset the list
+- Most recent file is automatically loaded when no file is specified
+
+### Fullscreen Mode
+- Application launches in fullscreen (maximized) mode by default
+- Provides optimal viewing area for text content
+- Can be toggled using standard window controls
+- Maintains fullscreen preference for consistent experience
+
 ### Line Numbers
 - Optional line numbering that can be toggled on/off
 - Right-aligned line numbers with consistent spacing
@@ -119,6 +138,8 @@ python guiless.py filename.txt
 - UTF-8 encoded text files
 - All file types (with fallback encoding)
 - Automatic word wrapping for improved readability
+- Recent files tracking and auto-loading
+- Configuration storage in user's home directory (~/.guiless/)
 
 ### Future Support (Extensible)
 The application is designed to easily add support for:
@@ -136,7 +157,12 @@ guiless2/
 ├── guiless.py          # Main application
 ├── requirements.txt    # Python dependencies
 ├── README.md          # This file
-└── sample.txt         # Sample text file for testing
+├── sample.txt         # Sample text file for testing
+└── run_guiless.sh     # Launcher script
+
+# User Configuration
+~/.guiless/
+└── recent_files.json  # Recent files list (auto-created)
 ```
 
 ### Key Classes
@@ -167,4 +193,7 @@ Contributions are welcome! Areas for improvement:
 - Customizable lines per page settings
 - Advanced word wrap options (soft wrap, smart breaks)
 - Performance optimization for very large files
+- Recent files management and organization
+- Configurable auto-load behavior
+- Custom fullscreen and window preferences
 

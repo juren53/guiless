@@ -6,7 +6,9 @@ Built with PyQt5 for enhanced text viewing with modern interface features
 
 import sys
 import os
-from PyQt5.QtWidgets import (QDialog, QLineEdit, QPushButton, QDialogButtonBox, 
+import json
+from pathlib import Path
+from PyQt5.QtWidgets import (QDialog, QLineEdit, QPushButton, QDialogButtonBox,
     QApplication, QMainWindow, QTextEdit, QVBoxLayout, QHBoxLayout,
     QWidget, QMenuBar, QAction, QFileDialog, QMessageBox, QSplitter,
     QCheckBox, QLabel, QToolBar, QStatusBar
@@ -248,7 +250,18 @@ class GuiLess(QMainWindow):
         self.two_page_mode = False
         self.current_left_page = 1
         
+        # Recent files management
+        self.max_recent_files = 10
+        self.recent_files = []
+        self.config_dir = Path.home() / '.guiless'
+        self.config_file = self.config_dir / 'recent_files.json'
+        
+        # Load recent files and initialize UI
+        self.load_recent_files()
         self.init_ui()
+        
+        # Set fullscreen mode by default
+        self.showMaximized()
     
     def init_ui(self):
         """Initialize the user interface"""
@@ -288,6 +301,12 @@ class GuiLess(QMainWindow):
         open_action.setShortcut(QKeySequence.Open)
         open_action.triggered.connect(self.open_file)
         file_menu.addAction(open_action)
+        
+        file_menu.addSeparator()
+        
+        # Recent files submenu
+        self.recent_menu = file_menu.addMenu('Recent Files')
+        self.update_recent_menu()
         
         file_menu.addSeparator()
         
@@ -440,6 +459,120 @@ class GuiLess(QMainWindow):
             action.triggered.connect(func)
             self.addAction(action)
     
+    def load_recent_files(self):
+        """Load recent files list from config file"""
+        try:
+            if self.config_file.exists():
+                with open(self.config_file, 'r') as f:
+                    self.recent_files = json.load(f)
+                # Remove files that no longer exist
+                self.recent_files = [f for f in self.recent_files if os.path.exists(f)]
+            else:
+                self.recent_files = []
+        except (json.JSONDecodeError, IOError):
+            self.recent_files = []
+    
+    def save_recent_files(self):
+        """Save recent files list to config file"""
+        try:
+            # Create config directory if it doesn't exist
+            self.config_dir.mkdir(exist_ok=True)
+            
+            with open(self.config_file, 'w') as f:
+                json.dump(self.recent_files, f, indent=2)
+        except IOError as e:
+            print(f"Warning: Could not save recent files: {e}")
+    
+    def add_recent_file(self, file_path):
+        """Add a file to the recent files list"""
+        file_path = os.path.abspath(file_path)
+        
+        # Remove if already in list
+        if file_path in self.recent_files:
+            self.recent_files.remove(file_path)
+        
+        # Add to beginning of list
+        self.recent_files.insert(0, file_path)
+        
+        # Limit list size
+        self.recent_files = self.recent_files[:self.max_recent_files]
+        
+        # Save and update menu
+        self.save_recent_files()
+        self.update_recent_menu()
+    
+    def update_recent_menu(self):
+        """Update the recent files menu"""
+        self.recent_menu.clear()
+        
+        if not self.recent_files:
+            no_recent = QAction('No recent files', self)
+            no_recent.setEnabled(False)
+            self.recent_menu.addAction(no_recent)
+            return
+        
+        for i, file_path in enumerate(self.recent_files):
+            if os.path.exists(file_path):
+                # Create action with filename and shortcut
+                filename = os.path.basename(file_path)
+                action = QAction(f"{i + 1}. {filename}", self)
+                action.setToolTip(file_path)
+                
+                # Add keyboard shortcut for first 9 files
+                if i < 9:
+                    action.setShortcut(f"Ctrl+{i + 1}")
+                
+                # Connect to open function
+                action.triggered.connect(lambda checked, path=file_path: self.open_recent_file(path))
+                self.recent_menu.addAction(action)
+        
+        # Add separator and clear option
+        self.recent_menu.addSeparator()
+        clear_action = QAction('Clear Recent Files', self)
+        clear_action.triggered.connect(self.clear_recent_files)
+        self.recent_menu.addAction(clear_action)
+    
+    def open_recent_file(self, file_path):
+        """Open a file from the recent files list"""
+        if os.path.exists(file_path):
+            if self.text_edit_1.load_file(file_path):
+                self.current_file = file_path
+                self.setWindowTitle(f"GUI Less - {os.path.basename(file_path)}")
+                self.status_bar.showMessage(f"Loaded: {file_path}")
+                
+                # Update recent files (moves to top)
+                self.add_recent_file(file_path)
+                
+                # If in two-page mode, set up pagination
+                if self.two_page_mode:
+                    self.setup_two_page_display()
+        else:
+            # File no longer exists, remove from recent files
+            if file_path in self.recent_files:
+                self.recent_files.remove(file_path)
+                self.save_recent_files()
+                self.update_recent_menu()
+            QMessageBox.warning(self, "File Not Found", f"The file '{file_path}' no longer exists.")
+    
+    def clear_recent_files(self):
+        """Clear the recent files list"""
+        reply = QMessageBox.question(
+            self, 'Clear Recent Files',
+            'Are you sure you want to clear all recent files?',
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+        
+        if reply == QMessageBox.Yes:
+            self.recent_files = []
+            self.save_recent_files()
+            self.update_recent_menu()
+    
+    def load_most_recent_file(self):
+        """Load the most recent file if available"""
+        if self.recent_files and os.path.exists(self.recent_files[0]):
+            self.open_recent_file(self.recent_files[0])
+    
     def open_file(self):
         """Open a file dialog and load selected file"""
         file_path, _ = QFileDialog.getOpenFileName(
@@ -451,6 +584,9 @@ class GuiLess(QMainWindow):
                 self.current_file = file_path
                 self.setWindowTitle(f"GUI Less - {os.path.basename(file_path)}")
                 self.status_bar.showMessage(f"Loaded: {file_path}")
+                
+                # Add to recent files
+                self.add_recent_file(file_path)
                 
                 # If in two-page mode, set up pagination
                 if self.two_page_mode:
@@ -625,6 +761,8 @@ class GuiLess(QMainWindow):
             "• Page navigation (Space/b for next/previous)\n"
             "• Optional line numbering\n"
             "• Toggleable word wrap for long lines\n"
+            "• Recent files menu with auto-load\n"
+            "• Fullscreen mode by default\n"
             "• Keyboard shortcuts compatible with less"
         )
 
@@ -633,22 +771,24 @@ def main():
     """Main application entry point"""
     app = QApplication(sys.argv)
     
+    window = GuiLess()
+    window.show()
+    
     # Handle command line arguments
     if len(sys.argv) > 1:
         file_path = sys.argv[1]
         if os.path.exists(file_path):
-            window = GuiLess()
-            window.show()
             # Load the file specified on command line
             if window.text_edit_1.load_file(file_path):
                 window.current_file = file_path
                 window.setWindowTitle(f"GUI Less - {os.path.basename(file_path)}")
+                window.add_recent_file(file_path)
         else:
             print(f"Error: File '{file_path}' not found.")
             sys.exit(1)
     else:
-        window = GuiLess()
-        window.show()
+        # No command line argument, try to load most recent file
+        window.load_most_recent_file()
     
     sys.exit(app.exec_())
 
