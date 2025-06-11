@@ -7,20 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Planned
+- Enhanced find functionality (regex, case-insensitive)
+- Syntax highlighting for code files
+- Bookmark/navigation features
+
+## [1.2.0] - 2025-06-11
+
 ### Added
-- Recent Files menu with automatic tracking of recently opened files
-- Auto-load functionality - most recent file loads automatically on startup
-- Fullscreen mode by default for optimal viewing experience
-- Keyboard shortcuts for recent files (Ctrl+1 through Ctrl+9)
-- Configuration storage in ~/.guiless/ directory
-- "Clear Recent Files" option in File menu
-- Automatic cleanup of non-existent files from recent list
-- Git repository initialization for version control
-- Comprehensive .gitignore file for Python projects
-- CHANGELOG.md for tracking project changes
-- CONTRIBUTING.md with collaboration guidelines and development workflow
-- MIT LICENSE file for open source distribution
-- Git tags for version tracking (v1.0.0)
+- Two-page mode is now the default startup mode for enhanced reading experience
+- Last directory memory - file dialogs remember the last directory accessed
+- Navigation controls (Previous Pages/Next Pages) are visible by default
+- Enhanced configuration system with backward compatibility for existing users
+
+### Changed
+- Default application startup mode changed from single-page to two-page view
+- Configuration file format upgraded from `recent_files.json` to `config.json`
+- File dialog now opens in the last directory where files were opened or browsed
+- Menu "Two Page Mode" option is checked by default to reflect current state
+
+### Enhanced
+- Improved user experience with immediate access to two-page reading mode
+- Better file navigation workflow with persistent directory memory
+- Seamless upgrade path for existing users with automatic config migration
+- More intuitive interface with visible navigation controls from startup
+
+### Technical
+- Added `last_directory` tracking in configuration management
+- Implemented backward compatibility for old configuration format
+- Updated file opening functions to persist and use last directory
+- Enhanced configuration structure while maintaining existing functionality
 
 ## [1.1.0] - 2025-06-11
 
@@ -108,6 +124,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
+- **v1.2.0**: Two-page mode as default, last directory memory, improved user experience
 - **v1.1.0**: Added recent files, auto-load, and fullscreen features for enhanced user experience
 - **v1.0.0**: Full-featured GUI Less application with two-page mode, word wrap, and core functionality
 - **v0.1.0**: Initial development version
@@ -125,6 +142,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Performance optimization for very large files
 - Recent files organization and management
 - Configurable auto-load behavior
+- Configurable default view mode (single vs two-page)
+- Directory bookmarks and favorites
 
 ### Potential Enhancements
 - Plugin system for custom file format support
@@ -134,4 +153,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Export functionality (PDF, HTML)
 - Search and replace capabilities
 - Annotation and note-taking features
+- Smart file type detection and handling
+- Advanced directory navigation features
 

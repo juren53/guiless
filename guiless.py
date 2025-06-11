@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-GUI Less - A GUI version of the less utility
+GUI Less v1.2.0 - A GUI version of the less utility
 Built with PyQt5 for enhanced text viewing with modern interface features
 """
 
@@ -781,11 +781,12 @@ class GuiLess(QMainWindow):
         """Show about dialog"""
         QMessageBox.about(
             self, "About GUI Less",
-            "GUI Less v1.0\n\n"
+            "GUI Less v1.2.0\n\n"
             "A GUI version of the less utility built with PyQt5.\n\n"
             "Features:\n"
+            "• Two-page mode as default for enhanced reading\n"
+            "• Last directory memory for convenient navigation\n"
             "• File viewing with syntax similar to less\n"
-            "• Two-page mode with proper page flow\n"
             "• Ctrl+Scroll wheel zooming\n"
             "• Page navigation (Space/b for next/previous)\n"
             "• Optional line numbering\n"
