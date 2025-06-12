@@ -1052,18 +1052,53 @@ class GuiLess(QMainWindow):
             # Split equally
             self.splitter.setSizes([500, 500])
         else:
-            # Hide second editor and navigation
+            # Hide second editor but keep navigation for single-page pagination
             self.text_edit_2.hide()
+            
+            # Set up single page pagination if file is loaded
+            if self.current_file:
+                self.setup_single_page_display()
+            else:
+                # No file loaded, hide navigation
+                self.prev_page_btn.hide()
+                self.next_page_btn.hide()
+                self.page_info_label.hide()
+    
+    def setup_single_page_display(self):
+        """Set up single page display with pagination if needed"""
+        if not self.current_file:
+            return
+        
+        # Calculate pagination for single page
+        self.text_edit_1.calculate_pagination()
+        
+        # Check if pagination is needed (more than one page)
+        if self.text_edit_1.total_pages > 1:
+            # Show navigation controls for single page pagination
+            self.prev_page_btn.show()
+            self.next_page_btn.show()
+            self.page_info_label.show()
+            
+            # Start with page 1
+            self.current_left_page = 1
+            self.update_single_page_display()
+        else:
+            # Only one page, show full content and hide navigation
             self.prev_page_btn.hide()
             self.next_page_btn.hide()
             self.page_info_label.hide()
             
-            # Return to full document view
-            if self.current_file:
-                if self.text_edit_1.word_wrap_enabled:
-                    self.text_edit_1.setPlainText(self.text_edit_1.original_content)
-                else:
-                    self.text_edit_1.setPlainText(self.text_edit_1.original_content)
+            # Show full content with line numbers if enabled
+            content = self.text_edit_1.original_content
+            if self.text_edit_1.show_line_numbers:
+                lines = content.split('\n')
+                numbered_lines = []
+                width = len(str(len(lines)))
+                for i, line in enumerate(lines, 1):
+                    line_num = str(i).rjust(width)
+                    numbered_lines.append(f"{line_num}: {line}")
+                content = '\n'.join(numbered_lines)
+            self.text_edit_1.setPlainText(content)
     
     def setup_two_page_display(self):
         """Set up the two-page display with proper pagination"""
@@ -1081,9 +1116,28 @@ class GuiLess(QMainWindow):
         self.current_left_page = 1
         self.update_page_display()
     
+    def update_single_page_display(self):
+        """Update display for single page mode"""
+        if self.two_page_mode:
+            return
+        
+        page_number = self.current_left_page
+        total_pages = max(self.text_edit_1.total_pages, 1)
+        
+        # Set content for current page
+        self.text_edit_1.set_page_content(page_number)
+        
+        # Update page info
+        self.page_info_label.setText(f"Page {page_number} of {total_pages}")
+        
+        # Enable/disable navigation buttons
+        self.prev_page_btn.setEnabled(page_number > 1)
+        self.next_page_btn.setEnabled(page_number < total_pages)
+    
     def update_page_display(self):
         """Update the display for current left and right pages"""
         if not self.two_page_mode:
+            self.update_single_page_display()
             return
             
         left_page = self.current_left_page
@@ -1113,26 +1167,34 @@ class GuiLess(QMainWindow):
             self.next_page_btn.setEnabled(left_page + 1 < total_pages)
     
     def previous_pages(self):
-        """Go to previous pair of pages"""
+        """Go to previous page(s)"""
         if self.current_left_page > 1:
-            if self.sliding_window_mode:
-                # Sliding window: move back by 1 page (1-2 -> 2-3 becomes 1-2)
-                self.current_left_page = max(1, self.current_left_page - 1)
+            if self.two_page_mode:
+                if self.sliding_window_mode:
+                    # Sliding window: move back by 1 page (1-2 -> 2-3 becomes 1-2)
+                    self.current_left_page = max(1, self.current_left_page - 1)
+                else:
+                    # Spread view: move back by 2 pages (3-4 -> 1-2)
+                    self.current_left_page = max(1, self.current_left_page - 2)
             else:
-                # Spread view: move back by 2 pages (3-4 -> 1-2)
-                self.current_left_page = max(1, self.current_left_page - 2)
+                # Single page mode: move back by 1 page
+                self.current_left_page = max(1, self.current_left_page - 1)
             self.update_page_display()
     
     def next_pages(self):
-        """Go to next pair of pages"""
+        """Go to next page(s)"""
         total_pages = max(self.text_edit_1.total_pages, 1)
         if self.current_left_page < total_pages:
-            if self.sliding_window_mode:
-                # Sliding window: move forward by 1 page (1-2 -> 2-3)
-                self.current_left_page = min(total_pages, self.current_left_page + 1)
+            if self.two_page_mode:
+                if self.sliding_window_mode:
+                    # Sliding window: move forward by 1 page (1-2 -> 2-3)
+                    self.current_left_page = min(total_pages, self.current_left_page + 1)
+                else:
+                    # Spread view: move forward by 2 pages (1-2 -> 3-4)
+                    self.current_left_page = min(total_pages, self.current_left_page + 2)
             else:
-                # Spread view: move forward by 2 pages (1-2 -> 3-4)
-                self.current_left_page = min(total_pages, self.current_left_page + 2)
+                # Single page mode: move forward by 1 page
+                self.current_left_page = min(total_pages, self.current_left_page + 1)
             self.update_page_display()
     
     def zoom_in(self):
@@ -1246,7 +1308,11 @@ class GuiLess(QMainWindow):
     
     def update_navigation_button_text(self):
         """Update navigation button text based on current mode"""
-        if self.sliding_window_mode:
+        if not self.two_page_mode:
+            # Single page mode always uses simple page navigation
+            self.prev_page_btn.setText("Previous Page")
+            self.next_page_btn.setText("Next Page")
+        elif self.sliding_window_mode:
             self.prev_page_btn.setText("Previous Page")
             self.next_page_btn.setText("Next Page")
         else:
