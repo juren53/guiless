@@ -1,6 +1,6 @@
 # GUI Less Help Guide
 
-**Version 1.2.0** - A modern graphical interface for text file viewing
+**Version 1.2.5** - A modern graphical interface for text file viewing
 
 ---
 
@@ -13,9 +13,10 @@
 5. [Text Display Options](#text-display-options)
 6. [Search and Find](#search-and-find)
 7. [Keyboard Shortcuts](#keyboard-shortcuts)
-8. [Customization and Settings](#customization-and-settings)
-9. [Troubleshooting](#troubleshooting)
-10. [Advanced Features](#advanced-features)
+8. [Themes and Appearance](#themes-and-appearance)
+9. [Customization and Settings](#customization-and-settings)
+10. [Troubleshooting](#troubleshooting)
+11. [Advanced Features](#advanced-features)
 
 ---
 
@@ -51,17 +52,17 @@ GUI Less is a graphical version of the traditional Unix `less` command-line util
 #### Menu Bar
 - **File Menu**: Open files, access recent files, exit application
 - **Edit Menu**: Find text, toggle display options (line numbers, word wrap, two-page mode)
-- **Help Menu**: About information and help resources
+- **View Menu**: Theme selection, zoom controls, two-page navigation modes
+- **Help Menu**: User guide and about information
 
 #### Toolbar
-- **Open**: Quick file opening
-- **Zoom Controls**: Zoom in, zoom out, reset zoom
-- **Word Wrap**: Toggle word wrapping on/off
+- **Open**: Quick file opening (streamlined interface)
 
 #### Content Area
 - **Single Page Mode**: One large text viewing area
-- **Two-Page Mode**: Side-by-side pages with navigation controls
-- **Page Navigation**: Previous/Next page buttons (in two-page mode)
+- **Two-Page Mode**: Side-by-side pages with intelligent navigation controls
+- **Page Navigation**: Previous/Next buttons with mode-specific behavior
+- **Navigation Modes**: Choose between Sliding Window or Spread View
 
 #### Status Bar
 - **Cursor Position**: Shows current line and column numbers
@@ -115,11 +116,31 @@ GUI Less is a graphical version of the traditional Unix `less` command-line util
 ### Two-Page Mode (Default)
 
 - **Book-style layout**: Content flows from left page to right page
+- **Navigation modes**: Choose between two different page progression styles
 - **Page navigation**: 
-  - Click "Next Pages" or press `Space` to advance
-  - Click "Previous Pages" or press `b` to go back
-- **Page display**: Shows page numbers (e.g., "Pages 1-2 of 50")
+  - Click navigation buttons or press `Space`/`b` to navigate
+  - Button labels change based on selected mode
+- **Page display**: Shows page numbers with mode indicator (e.g., "Pages 1-2 of 50 (Sliding)")
 - **Synchronized features**: Both pages share zoom level and display settings
+
+#### Navigation Modes
+
+**Sliding Window View (Default)**
+- **Pattern**: 1-2, 2-3, 3-4, 4-5...
+- **Behavior**: Overlapping progression for continuous reading
+- **Use case**: Best for documents where context continuity is important
+- **Button labels**: "Previous Page" / "Next Page"
+
+**Spread View**
+- **Pattern**: 1-2, 3-4, 5-6, 7-8...
+- **Behavior**: Distinct page spreads like a traditional book
+- **Use case**: Best for book-like reading with clear chapter boundaries
+- **Button labels**: "Previous Spread" / "Next Spread"
+
+**Changing Navigation Mode**
+- **Menu**: Go to `View` → `Two-Page Navigation`
+- **Options**: Select either "Sliding Window View" or "Spread View"
+- **Persistence**: Your choice is saved and restored between sessions
 
 ### Switching Between Modes
 
@@ -137,15 +158,16 @@ GUI Less is a graphical version of the traditional Unix `less` command-line util
    - Hold `Ctrl` and scroll up to zoom in
    - Hold `Ctrl` and scroll down to zoom out
 
-2. **Toolbar buttons:**
-   - Click "Zoom In" or press `Ctrl+=`
-   - Click "Zoom Out" or press `Ctrl+-`
-   - Click "Reset Zoom" or press `Ctrl+0`
+2. **Menu-based controls:**
+   - Go to `View` → `Zoom` → "Zoom In" or press `Ctrl+=`
+   - Go to `View` → `Zoom` → "Zoom Out" or press `Ctrl+-`
+   - Go to `View` → `Zoom` → "Reset Zoom" or press `Ctrl+0`
 
 3. **Features:**
    - Maintains fixed-width font for proper text alignment
    - Both pages zoom together in two-page mode
    - Zoom level persists while the file is open
+   - Clean interface with zoom controls organized in View menu
 
 ### Line Numbers
 
@@ -158,8 +180,7 @@ GUI Less is a graphical version of the traditional Unix `less` command-line util
 
 1. **Enabling/Disabling:**
    - Menu: `Edit` → `Word Wrap`
-   - Toolbar: Click the "Word Wrap" button
-   - Keyboard: Press `w`
+   - **Default**: Word wrap is enabled by default for optimal reading
 
 2. **Behavior:**
    - **Enabled** (default): Long lines wrap to fit the window width
@@ -206,7 +227,6 @@ GUI Less is a graphical version of the traditional Unix `less` command-line util
 | `N`       | Find Previous  | Previous search result (planned) |
 | `Space`   | Next Pages     | Advance to the next page pair    |
 | `b`       | Previous Pages | Go back to the previous page pair|
-| `w`       | Word Wrap      | Toggle word wrap mode            |
 
 ### Standard GUI Shortcuts
 
@@ -230,17 +250,88 @@ GUI Less is a graphical version of the traditional Unix `less` command-line util
 
 ---
 
+## Themes and Appearance
+
+### Theme Selection
+
+**GUI Less v1.2.5** includes a comprehensive theming system with 6 beautiful themes to enhance your reading experience.
+
+#### Available Themes
+
+1. **Default**
+   - Clean, standard light theme
+   - High contrast black text on white background
+   - Perfect for general document reading
+
+2. **Dark**
+   - Modern dark theme for reduced eye strain
+   - White text on dark background
+   - Ideal for low-light environments and extended reading sessions
+
+3. **Solarized Light**
+   - Warm, easy-on-the-eyes light theme
+   - Carefully selected color palette for optimal readability
+   - Popular among developers and writers
+
+4. **Solarized Dark**
+   - Dark version of the acclaimed Solarized color scheme
+   - Excellent contrast with reduced brightness
+   - Perfect balance of functionality and aesthetics
+
+5. **High Contrast**
+   - Maximum contrast theme for accessibility
+   - Black background with bright white text
+   - Excellent for users with visual impairments
+
+6. **Monokai**
+   - Popular editor theme with rich, vibrant colors
+   - Dark background with excellent syntax highlighting colors
+   - Favored by developers and programmers
+
+#### Changing Themes
+
+1. **Access theme selection:**
+   - Go to `View` → `Theme...`
+   - Theme dialog opens with current selection highlighted
+
+2. **Preview themes:**
+   - Select any theme from the dropdown
+   - Preview area shows real-time sample of how text will appear
+   - Try different themes to find your preference
+
+3. **Apply theme:**
+   - Click "OK" to apply the selected theme
+   - Theme is immediately applied to the entire interface
+   - Status bar confirms the theme change
+
+4. **Persistence:**
+   - Your theme choice is automatically saved
+   - Theme is restored when you restart the application
+   - Each theme styles all UI elements consistently
+
+#### Theme Features
+
+- **Comprehensive styling**: Themes affect all interface elements
+- **Consistent design**: Menus, buttons, text areas, and dialogs all match
+- **Window title indicator**: Non-default themes show in window title
+- **Real-time preview**: See exactly how themes will look before applying
+- **Instant switching**: No restart required to change themes
+
+---
+
 ## Customization and Settings
 
 ### Configuration Storage
 
 - **Location**: `~/.guiless/config.json`
 - **Automatic creation**: Created on first use
-- **Content**: Recent files list and last used directory
+- **Content**: Recent files, last used directory, theme preference, and navigation mode
 
 ### Default Settings
 
 - **Display mode**: Two-page mode enabled
+- **Navigation mode**: Sliding Window View
+- **Theme**: Default (light theme)
 - **Word wrap**: Enabled
 - **Window state**: Fullscreen/maximized
 - **Font**: Courier New, 10pt (fixed-width)
@@ -250,6 +341,8 @@ GUI Less is a graphical version of the traditional Unix `less` command-line util
 
 - **Recent files**: Automatically saved and restored
 - **Last directory**: Remembers the last browsed folder
+- **Theme preference**: Selected theme is saved and restored
+- **Navigation mode**: Two-page navigation preference is remembered
 - **File cleanup**: Non-existent files automatically removed
 
 ---
@@ -264,14 +357,18 @@ GUI Less is a graphical version of the traditional Unix `less` command-line util
 - **Check encoding**: GUI Less handles UTF-8 and falls back for other encodings
 
 #### Display Problems
-- **Text too small/large**: Use zoom controls (`Ctrl+Scroll` or toolbar)
-- **Lines too long**: Enable word wrap (`w` key or Edit menu)
+- **Text too small/large**: Use zoom controls (`Ctrl+Scroll` or View → Zoom menu)
+- **Lines too long**: Enable word wrap (Edit menu)
 - **Can't see line numbers**: Toggle line numbers in the Edit menu
+- **Theme issues**: Try switching themes via View → Theme menu
+- **Interface looks wrong**: Reset to Default theme if custom themes cause issues
 
 #### Navigation Issues
 - **Pages don't advance**: Check if you're at the end of the document
+- **Unexpected page progression**: Check navigation mode (View → Two-Page Navigation)
 - **Two-page mode problems**: Try toggling two-page mode off and on
 - **Keyboard shortcuts not working**: Ensure the main window has focus
+- **Wrong button labels**: Navigation mode affects button text (Page vs Spread)
 
 #### Performance Issues
 - **Large files**: GUI Less uses pagination to handle large files efficiently
@@ -321,17 +418,23 @@ GUI Less is a graphical version of the traditional Unix `less` command-line util
 
 ### Optimal Usage
 
-1. **For reading books/documents**: Use two-page mode with word wrap enabled
-2. **For code files**: Disable word wrap, enable line numbers
-3. **For large files**: Use page navigation instead of scrolling
-4. **For small text**: Use `Ctrl+Scroll` zoom instead of changing system font
+1. **For reading books/documents**: Use two-page mode with Spread View navigation and word wrap enabled
+2. **For continuous documents**: Use Sliding Window View for overlapping context
+3. **For code files**: Disable word wrap, enable line numbers, consider Monokai theme
+4. **For large files**: Use page navigation instead of scrolling
+5. **For small text**: Use `Ctrl+Scroll` zoom instead of changing system font
+6. **For eye strain**: Try Dark or Solarized Dark themes
+7. **For accessibility**: Use High Contrast theme
 
 ### Workflow Recommendations
 
-1. **Start with defaults**: Two-page mode and word wrap work well for most content
-2. **Use recent files**: Quick access to frequently viewed documents
-3. **Learn keyboard shortcuts**: Especially `Space`/`b` for page navigation and `w` for word wrap
-4. **Utilize fullscreen**: Default fullscreen mode maximizes reading area
+1. **Start with defaults**: Two-page mode with Sliding Window navigation works well for most content
+2. **Customize your experience**: Choose a theme that's comfortable for your eyes and environment
+3. **Use recent files**: Quick access to frequently viewed documents
+4. **Learn keyboard shortcuts**: Especially `Space`/`b` for page navigation
+5. **Experiment with navigation modes**: Try both Sliding Window and Spread View to see which you prefer
+6. **Utilize fullscreen**: Default fullscreen mode maximizes reading area
+7. **Set up your environment**: Choose appropriate theme for your lighting conditions
 
 ### Performance Tips
 
@@ -360,5 +463,5 @@ GUI Less is a graphical version of the traditional Unix `less` command-line util
 
 ---
 
-*This help guide covers GUI Less version 1.2.0. For the latest updates and features, check the project's GitHub repository.*
+*This help guide covers GUI Less version 1.2.5. For the latest updates and features, check the project's GitHub repository and [changelog](https://github.com/juren53/guiless/blob/main/CHANGELOG.md).*
 
