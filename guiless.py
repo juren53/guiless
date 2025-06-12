@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-GUI Less v1.2.5 - A GUI version of the less utility
+GUI Less v1.2.6 - A GUI version of the less utility
 Built with PyQt5 for enhanced text viewing with modern interface features
 
 For version history and detailed changelog, see:
@@ -12,6 +12,7 @@ import os
 import json
 import webbrowser
 import re
+import textwrap
 from pathlib import Path
 try:
     import markdown
@@ -503,20 +504,133 @@ class LessTextEdit(QTextEdit):
             return False
     
     def calculate_pagination(self):
-        """Calculate pagination using HTML-based document layout"""
+        """Calculate pagination using viewport-based content fitting"""
         if not self.original_content:
             return
         
-        # Use HTML-based pagination for accurate layout
-        self.calculate_html_pagination()
+        # Use direct viewport-based pagination for consistent page filling
+        self.calculate_viewport_pagination()
+    
+    def calculate_viewport_pagination(self):
+        """Calculate pagination using visual lines for perfect viewport fitting"""
+        if not self.original_content:
+            return
         
-        # Store the HTML document for page rendering
-        if hasattr(self, 'html_content'):
-            self.use_html_pagination = True
-        else:
-            # Fallback to old method if HTML conversion fails
-            self.use_html_pagination = False
-            self.calculate_fallback_pagination()
+        lines = self.original_content.split('\n')
+        
+        if not self.word_wrap_enabled:
+            # No-wrap mode: simple line-based pagination
+            viewport_height = self.viewport().height()
+            font_metrics = self.fontMetrics()
+            line_height = font_metrics.lineSpacing()
+            self.lines_per_page = max(1, (viewport_height - 40) // line_height)
+            total_lines = len(lines)
+            self.total_pages = max(1, (total_lines + self.lines_per_page - 1) // self.lines_per_page)
+            return
+        
+        # For word wrap mode, use visual line-based pagination
+        self.calculate_visual_line_pagination(lines)
+    
+    def calculate_visual_line_pagination(self, lines):
+        """Calculate pagination using visual lines with proper line breaking"""
+        # Get viewport metrics
+        viewport_height = self.viewport().height() - 40  # Leave margin
+        font_metrics = self.fontMetrics()
+        line_height = font_metrics.lineSpacing()
+        char_width = font_metrics.averageCharWidth()
+        
+        # Calculate how many visual lines fit per page
+        visual_lines_per_page = max(1, viewport_height // line_height)
+        
+        # Calculate viewport width in characters
+        viewport_width = self.viewport().width() - 40  # Account for margins
+        chars_per_line = max(1, viewport_width // char_width)
+        
+        # Convert all text lines to visual lines using textwrap
+        all_visual_lines = []
+        
+        for text_line in lines:
+            if not text_line.strip():  # Empty line
+                all_visual_lines.append('')
+            else:
+                # Use textwrap to break long lines properly
+                wrapped_lines = textwrap.wrap(
+                    text_line, 
+                    width=chars_per_line,
+                    break_long_words=True,
+                    break_on_hyphens=True
+                )
+                if wrapped_lines:
+                    all_visual_lines.extend(wrapped_lines)
+                else:
+                    all_visual_lines.append('')  # Empty wrapped line
+        
+        # Create page breaks based on visual lines
+        total_visual_lines = len(all_visual_lines)
+        self.total_pages = max(1, (total_visual_lines + visual_lines_per_page - 1) // visual_lines_per_page)
+        
+        # Store visual lines and pagination info
+        self.visual_lines = all_visual_lines
+        self.visual_lines_per_page = visual_lines_per_page
+        self.use_visual_line_pagination = True
+    
+    def calculate_dynamic_page_breaks(self, lines):
+        """Calculate page breaks by measuring actual content height in viewport"""
+        viewport_height = self.viewport().height() - 60  # Leave margin for safety
+        
+        page_breaks = []
+        current_page_start = 0
+        
+        while current_page_start < len(lines):
+            # Find how many lines fit in one viewport
+            lines_that_fit = self.find_lines_that_fit_viewport(lines, current_page_start, viewport_height)
+            
+            if lines_that_fit == 0:
+                lines_that_fit = 1  # Always include at least one line
+            
+            page_end = min(current_page_start + lines_that_fit - 1, len(lines) - 1)
+            page_breaks.append((current_page_start, page_end))
+            
+            current_page_start = page_end + 1
+        
+        self.page_breaks = page_breaks
+        self.total_pages = len(page_breaks)
+        self.use_dynamic_breaks = True
+    
+    def find_lines_that_fit_viewport(self, lines, start_line, max_height):
+        """Find how many lines fit in viewport without scrolling"""
+        # Start with a reasonable guess and adjust
+        test_line_count = 1
+        max_test_count = min(50, len(lines) - start_line)  # Don't test too many
+        
+        while test_line_count <= max_test_count:
+            # Test content with current line count
+            end_line = min(start_line + test_line_count, len(lines))
+            test_lines = lines[start_line:end_line]
+            test_content = '\n'.join(test_lines)
+            
+            # Measure actual height this content would take
+            content_height = self.measure_content_height(test_content)
+            
+            if content_height > max_height:
+                # Too much content, return previous count
+                return max(1, test_line_count - 1)
+            
+            test_line_count += 1
+        
+        # All remaining lines fit
+        return max_test_count
+    
+    def measure_content_height(self, content):
+        """Measure the actual height content would take in the viewport"""
+        # Create a temporary QTextDocument to measure content
+        temp_doc = QTextDocument()
+        temp_doc.setPlainText(content)
+        temp_doc.setDefaultFont(self.font())
+        temp_doc.setTextWidth(self.viewport().width() - 20)
+        
+        # Return the actual height needed
+        return temp_doc.documentLayout().documentSize().height()
     
     def calculate_fallback_pagination(self):
         """Fallback pagination calculation when HTML method fails"""
@@ -720,17 +834,35 @@ class LessTextEdit(QTextEdit):
         self.ensureCursorVisible()
     
     def set_wrapped_page_content(self, page_number):
-        """Set page content for word wrap mode using HTML-based pagination"""
-        if hasattr(self, 'use_html_pagination') and self.use_html_pagination:
-            # Use HTML-based pagination for accurate layout
-            self.set_html_page_content(page_number)
-        elif hasattr(self, 'content_based_pagination') and hasattr(self, 'page_breaks'):
-            # Use content-based pagination
-            lines = self.original_content.split('\n')
+        """Set page content for word wrap mode using visual line pagination"""
+        # Check if we have visual line pagination (perfect page filling)
+        if hasattr(self, 'use_visual_line_pagination') and hasattr(self, 'visual_lines'):
+            # Use the visual lines that perfectly fill pages
+            visual_lines_per_page = getattr(self, 'visual_lines_per_page', 25)
             
-            if page_number <= len(self.page_breaks):
-                start_line, end_line = self.page_breaks[page_number - 1]
-                page_lines = lines[start_line:end_line + 1]
+            start_visual_line = (page_number - 1) * visual_lines_per_page
+            end_visual_line = min(start_visual_line + visual_lines_per_page, len(self.visual_lines))
+            
+            if start_visual_line < len(self.visual_lines):
+                page_visual_lines = self.visual_lines[start_visual_line:end_visual_line]
+                page_content = '\n'.join(page_visual_lines)
+                
+                # Line numbers are complex with visual lines - skip for now
+                # TODO: Implement proper line numbering for visual lines
+                
+                self.setPlainText(page_content)
+            else:
+                self.setPlainText("")
+        else:
+            # Fallback to line-based pagination
+            lines = self.original_content.split('\n')
+            effective_lines_per_page = getattr(self, 'effective_lines_per_page', max(1, self.lines_per_page // 3))
+            
+            start_line = (page_number - 1) * effective_lines_per_page
+            end_line = min(start_line + effective_lines_per_page, len(lines))
+            
+            if start_line < len(lines):
+                page_lines = lines[start_line:end_line]
                 page_content = '\n'.join(page_lines)
                 
                 # Apply line numbers if enabled
@@ -748,9 +880,6 @@ class LessTextEdit(QTextEdit):
                 self.setPlainText(page_content)
             else:
                 self.setPlainText("")
-        else:
-            # Fallback to old method
-            self.set_wrapped_page_content_fallback(page_number)
         
         # Ensure cursor and scroll position are at the top of the page
         cursor = self.textCursor()
@@ -1628,7 +1757,7 @@ class GuiLess(QMainWindow):
         """Show about dialog"""
         QMessageBox.about(
             self, "About GUI Less",
-            "GUI Less v1.2.5\n\n"
+            "GUI Less v1.2.6\n\n"
             "A GUI version of the less utility built with PyQt5.\n\n"
             "Features:\n"
             "• Two-page mode as default for enhanced reading\n"

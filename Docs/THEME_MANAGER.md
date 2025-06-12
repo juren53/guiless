@@ -497,5 +497,5 @@ def get_theme(self, theme_name):
 
 ---
 
-*This documentation covers GUI Less Theme Manager v1.2.5. For the latest updates and theme additions, check the [project repository](https://github.com/juren53/guiless) and [changelog](https://github.com/juren53/guiless/blob/main/CHANGELOG.md).*
+*This documentation covers GUI Less Theme Manager v1.2.6. For the latest updates and theme additions, check the [project repository](https://github.com/juren53/guiless) and [changelog](https://github.com/juren53/guiless/blob/main/CHANGELOG.md).*
 

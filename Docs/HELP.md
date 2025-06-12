@@ -1,6 +1,6 @@
 # GUI Less Help Guide
 
-**Version 1.2.5** - A modern graphical interface for text file viewing
+**Version 1.2.6** - A modern graphical interface for text file viewing
 
 ---
 
@@ -463,5 +463,5 @@ GUI Less is a graphical version of the traditional Unix `less` command-line util
 
 ---
 
-*This help guide covers GUI Less version 1.2.5. For the latest updates and features, check the project's GitHub repository and [changelog](https://github.com/juren53/guiless/blob/main/CHANGELOG.md).*
+*This help guide covers GUI Less version 1.2.6. For the latest updates and features, check the project's GitHub repository and [changelog](https://github.com/juren53/guiless/blob/main/CHANGELOG.md).*
 
