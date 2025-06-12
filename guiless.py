@@ -568,7 +568,7 @@ class LessTextEdit(QTextEdit):
         self.setPlainText(page_content)
         # Ensure cursor and scroll position are at the top of the page
         cursor = self.textCursor()
-        cursor.movePosition(cursor.Start)
+        cursor.movePosition(QTextCursor.Start)
         self.setTextCursor(cursor)
         self.ensureCursorVisible()
     
@@ -605,7 +605,7 @@ class LessTextEdit(QTextEdit):
         
         # Ensure cursor and scroll position are at the top of the page
         cursor = self.textCursor()
-        cursor.movePosition(cursor.Start)
+        cursor.movePosition(QTextCursor.Start)
         self.setTextCursor(cursor)
         self.ensureCursorVisible()
     
@@ -1185,15 +1185,23 @@ class GuiLess(QMainWindow):
             
         left_page = self.current_left_page
         right_page = self.current_left_page + 1
+        total_pages = max(self.text_edit_1.total_pages, 1)
+        
+        # Ensure we don't go beyond the last page
+        left_page = min(left_page, total_pages)
+        self.current_left_page = left_page
         
         # Set content for left page
         self.text_edit_1.set_page_content(left_page)
         
-        # Set content for right page
-        self.text_edit_2.set_page_content(right_page)
+        # Set content for right page only if it exists
+        if right_page <= total_pages:
+            self.text_edit_2.set_page_content(right_page)
+        else:
+            # Clear right page if beyond document end
+            self.text_edit_2.setPlainText("")
         
         # Update page info
-        total_pages = max(self.text_edit_1.total_pages, 1)
         mode_text = "Sliding" if self.sliding_window_mode else "Spread"
         if right_page <= total_pages:
             self.page_info_label.setText(f"Pages {left_page}-{right_page} of {total_pages} ({mode_text})")
