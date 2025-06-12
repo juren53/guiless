@@ -121,6 +121,38 @@ class ThemeManager:
                 'button_text': '#f8f8f2',
                 'button_hover': '#5a594d',
                 'border': '#75715e'
+            },
+            'Purple Night': {
+                'name': 'Purple Night',
+                'background': '#1e1e2e',
+                'text': '#cdd6f4',
+                'selection_bg': '#7c3aed',
+                'selection_text': '#ffffff',
+                'menubar_bg': '#2a2a40',
+                'menubar_text': '#cdd6f4',
+                'toolbar_bg': '#313244',
+                'statusbar_bg': '#2a2a40',
+                'statusbar_text': '#cdd6f4',
+                'button_bg': '#45475a',
+                'button_text': '#cdd6f4',
+                'button_hover': '#585b70',
+                'border': '#6c7086'
+            },
+            'Terminal Green': {
+                'name': 'Terminal Green',
+                'background': '#000000',
+                'text': '#00ff00',
+                'selection_bg': '#008000',
+                'selection_text': '#000000',
+                'menubar_bg': '#001100',
+                'menubar_text': '#00ff00',
+                'toolbar_bg': '#002200',
+                'statusbar_bg': '#001100',
+                'statusbar_text': '#00ff00',
+                'button_bg': '#003300',
+                'button_text': '#00ff00',
+                'button_hover': '#004400',
+                'border': '#008000'
             }
         }
         self.current_theme = 'Default'
