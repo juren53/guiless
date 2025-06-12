@@ -2,6 +2,9 @@
 """
 GUI Less v1.2.5 - A GUI version of the less utility
 Built with PyQt5 for enhanced text viewing with modern interface features
+
+For version history and detailed changelog, see:
+https://github.com/juren53/guiless/blob/main/CHANGELOG.md
 """
 
 import sys

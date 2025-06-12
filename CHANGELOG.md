@@ -12,6 +12,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Syntax highlighting for code files
 - Bookmark/navigation features
 
+## [1.2.5] - 2025-06-12
+
+### Added
+- **Comprehensive UI Themes System** with 6 beautiful themes:
+  - Default (clean light theme)
+  - Dark (modern dark theme for reduced eye strain)
+  - Solarized Light (warm, easy-on-the-eyes light theme)
+  - Solarized Dark (popular dark theme with excellent contrast)
+  - High Contrast (black background with bright text for accessibility)
+  - Monokai (popular editor theme with rich colors)
+- **ThemeDialog** with real-time preview for easy theme selection
+- **Two-Page Navigation Modes** for enhanced reading control:
+  - **Sliding Window View** (1-2, 2-3, 3-4...) - continuous overlapping navigation
+  - **Spread View** (1-2, 3-4, 5-6...) - book-style distinct page spreads
+- **View Menu** reorganization with logical grouping:
+  - Theme selection submenu
+  - Zoom controls submenu (Zoom In, Zoom Out, Reset Zoom)
+  - Two-Page Navigation mode selection
+- Navigation mode indicators in page counter display
+- Dynamic button labels that change based on navigation mode
+- Persistent theme and navigation mode preferences in configuration
+
+### Changed
+- **Moved Zoom controls** from toolbar to View → Zoom submenu for cleaner UI
+- **Removed Word Wrap button** from toolbar (still available in Edit menu)
+- **Simplified toolbar** to only essential "Open" button for reduced clutter
+- Updated About dialog to reflect new features and capabilities
+- Enhanced status bar messages for better user feedback
+
+### Enhanced
+- **Theme persistence** - selected theme is saved and restored between sessions
+- **Navigation mode persistence** - preferred navigation style is remembered
+- **Comprehensive CSS styling** - all UI elements consistently themed
+- **Improved user experience** with organized menu structure
+- **Real-time theme preview** in selection dialog
+- **Smart navigation button states** based on current mode and position
+- **Window title updates** to reflect current theme (when not Default)
+
+### Technical
+- Added `ThemeManager` class for centralized theme management
+- Implemented CSS stylesheet generation system
+- Added `ThemeDialog` class with live preview functionality
+- Enhanced configuration system to include theme and navigation preferences
+- Updated navigation logic to support both sliding and spread modes
+- Improved UI organization with logical menu grouping
+- Added comprehensive styling for all Qt widgets
+- Enhanced keyboard shortcut integration for zoom controls
+
 ## [1.2.0] - 2025-06-11
 
 ### Added
@@ -134,6 +182,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
+- **v1.2.5**: Comprehensive UI themes, two-page navigation modes, and streamlined interface
 - **v1.2.0**: Two-page mode as default, last directory memory, improved user experience
 - **v1.1.0**: Added recent files, auto-load, and fullscreen features for enhanced user experience
 - **v1.0.0**: Full-featured GUI Less application with two-page mode, word wrap, and core functionality
@@ -157,7 +206,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Potential Enhancements
 - Plugin system for custom file format support
-- Themes and customizable UI
+- ~~Themes and customizable UI~~ ✅ **Completed in v1.2.5**
 - Multiple document tabs
 - Split-screen comparison mode
 - Export functionality (PDF, HTML)
