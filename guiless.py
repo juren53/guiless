@@ -566,6 +566,11 @@ class LessTextEdit(QTextEdit):
             page_content = '\n'.join(numbered_lines)
         
         self.setPlainText(page_content)
+        # Ensure cursor and scroll position are at the top of the page
+        cursor = self.textCursor()
+        cursor.movePosition(cursor.Start)
+        self.setTextCursor(cursor)
+        self.ensureCursorVisible()
     
     def set_wrapped_page_content(self, page_number):
         """Set page content for word wrap mode - simplified approach"""
@@ -597,6 +602,12 @@ class LessTextEdit(QTextEdit):
             self.setPlainText(page_content)
         else:
             self.setPlainText("")
+        
+        # Ensure cursor and scroll position are at the top of the page
+        cursor = self.textCursor()
+        cursor.movePosition(cursor.Start)
+        self.setTextCursor(cursor)
+        self.ensureCursorVisible()
     
     def resizeEvent(self, event):
         """Recalculate pagination when window is resized"""
