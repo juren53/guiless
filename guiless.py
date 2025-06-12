@@ -519,29 +519,32 @@ class LessTextEdit(QTextEdit):
             self.total_pages = max(1, (total_lines + self.lines_per_page - 1) // self.lines_per_page)
     
     def calculate_wrapped_pagination(self):
-        """Calculate pagination when word wrap is enabled based on visual lines"""
-        # Set a temporary document to measure wrapped lines
-        temp_doc = QTextDocument()
-        temp_doc.setPlainText(self.original_content)
-        temp_doc.setTextWidth(self.viewport().width() - 20)  # Account for margins
-        temp_doc.setDefaultFont(self.font())
+        """Calculate pagination when word wrap is enabled - viewport-based approach"""
+        lines = self.original_content.split('\n')
+        total_lines = len(lines)
         
-        # Count total visual lines by iterating through all blocks
-        total_visual_lines = 0
-        block = temp_doc.begin()
-        while block.isValid():
-            layout = block.layout()
-            if layout:
-                total_visual_lines += layout.lineCount()
-            else:
-                total_visual_lines += 1  # Fallback for empty blocks
-            block = block.next()
+        # Calculate effective lines per page based on actual content analysis
+        # For files with very long lines, use much smaller chunks
+        long_line_count = sum(1 for line in lines if len(line) > 100)
+        long_line_ratio = long_line_count / max(total_lines, 1)
         
-        # Calculate pages based on visual lines
-        self.total_pages = max(1, (total_visual_lines + self.lines_per_page - 1) // self.lines_per_page)
+        if long_line_ratio > 0.5:  # More than 50% of lines are very long
+            # Extremely conservative - assume 8x wrapping for news articles
+            effective_lines_per_page = max(1, self.lines_per_page // 8)
+        elif long_line_ratio > 0.3:  # 30-50% of lines are very long
+            # Very conservative pagination - assume 6x wrapping
+            effective_lines_per_page = max(1, self.lines_per_page // 6)
+        elif long_line_ratio > 0.1:  # 10-30% of lines are long
+            # Conservative pagination - assume 5x wrapping  
+            effective_lines_per_page = max(1, self.lines_per_page // 5)
+        else:
+            # Normal text - assume 4x wrapping
+            effective_lines_per_page = max(1, self.lines_per_page // 4)
         
-        # Store visual line count for use in pagination
-        self.total_visual_lines = total_visual_lines
+        self.total_pages = max(1, (total_lines + effective_lines_per_page - 1) // effective_lines_per_page)
+        
+        # Store the effective lines per page for content setting
+        self.effective_lines_per_page = effective_lines_per_page
     
     def set_page_content(self, page_number):
         """Set content for a specific page"""
@@ -590,77 +593,17 @@ class LessTextEdit(QTextEdit):
         self.ensureCursorVisible()
     
     def set_wrapped_page_content(self, page_number):
-        """Set page content for word wrap mode based on visual lines"""
-        if not hasattr(self, 'total_visual_lines'):
-            # Fallback to text line pagination if visual line calculation failed
-            self.set_wrapped_page_content_fallback(page_number)
-            return
-            
-        # Create temporary document to calculate visual line positions
-        temp_doc = QTextDocument()
-        content_to_display = self.original_content
-        
-        # Apply line numbers if enabled
-        if self.show_line_numbers:
-            lines = self.original_content.split('\n')
-            numbered_lines = []
-            total_lines = len(lines)
-            width = len(str(total_lines))
-            
-            for i, line in enumerate(lines, 1):
-                line_num = str(i).rjust(width)
-                numbered_lines.append(f"{line_num}: {line}")
-            
-            content_to_display = '\n'.join(numbered_lines)
-        
-        temp_doc.setPlainText(content_to_display)
-        temp_doc.setTextWidth(self.viewport().width() - 20)
-        temp_doc.setDefaultFont(self.font())
-        
-        # Calculate which text blocks to include based on visual line count
-        target_start_visual_line = (page_number - 1) * self.lines_per_page
-        target_end_visual_line = target_start_visual_line + self.lines_per_page
-        
-        current_visual_line = 0
-        page_blocks = []
-        
-        block = temp_doc.begin()
-        while block.isValid() and current_visual_line < target_end_visual_line:
-            layout = block.layout()
-            block_visual_lines = layout.lineCount() if layout else 1
-            
-            # Check if this block should be included in the page
-            if current_visual_line + block_visual_lines > target_start_visual_line:
-                page_blocks.append(block.text())
-            
-            current_visual_line += block_visual_lines
-            block = block.next()
-        
-        # Join the page content
-        page_content = '\n'.join(page_blocks)
-        
-        if page_content:
-            self.setPlainText(page_content)
-        else:
-            self.setPlainText("")
-        
-        # Ensure cursor and scroll position are at the top of the page
-        cursor = self.textCursor()
-        cursor.movePosition(QTextCursor.Start)
-        self.setTextCursor(cursor)
-        self.ensureCursorVisible()
+        """Set page content for word wrap mode - use simpler approach"""
+        # Use the fallback method which works correctly
+        self.set_wrapped_page_content_fallback(page_number)
     
     def set_wrapped_page_content_fallback(self, page_number):
         """Fallback method for wrapped content pagination"""
         # Use smaller chunks for better visual line approximation
         lines = self.original_content.split('\n')
         
-        # Use smaller page size for wrapped content to account for line wrapping
-        effective_lines_per_page = max(1, self.lines_per_page // 3)  # Assume average 3x wrapping
-        
-        # Recalculate total pages based on effective lines per page
-        total_lines = len(lines)
-        self.total_pages = max(1, (total_lines + effective_lines_per_page - 1) // effective_lines_per_page)
+        # Use the effective_lines_per_page calculated in calculate_wrapped_pagination
+        effective_lines_per_page = getattr(self, 'effective_lines_per_page', max(1, self.lines_per_page // 3))
         
         start_line = (page_number - 1) * effective_lines_per_page
         end_line = min(start_line + effective_lines_per_page, len(lines))
@@ -672,6 +615,7 @@ class LessTextEdit(QTextEdit):
             # Apply line numbers if enabled
             if self.show_line_numbers:
                 numbered_lines = []
+                total_lines = len(lines)
                 width = len(str(total_lines))
                 
                 for i, line in enumerate(page_lines, start_line + 1):
