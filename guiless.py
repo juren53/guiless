@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-GUI Less v1.2.0 - A GUI version of the less utility
+GUI Less v1.2.5 - A GUI version of the less utility
 Built with PyQt5 for enhanced text viewing with modern interface features
 """
 
@@ -12,10 +12,355 @@ from pathlib import Path
 from PyQt5.QtWidgets import (QDialog, QLineEdit, QPushButton, QDialogButtonBox,
     QApplication, QMainWindow, QTextEdit, QVBoxLayout, QHBoxLayout,
     QWidget, QMenuBar, QAction, QFileDialog, QMessageBox, QSplitter,
-    QCheckBox, QLabel, QToolBar, QStatusBar
+    QCheckBox, QLabel, QToolBar, QStatusBar, QComboBox
 )
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal
 from PyQt5.QtGui import QFont, QKeySequence, QTextCursor, QTextDocument, QTextCharFormat, QColor
+
+
+class ThemeManager:
+    """Manages application themes and styling"""
+    
+    def __init__(self):
+        self.themes = {
+            'Default': {
+                'name': 'Default',
+                'background': '#ffffff',
+                'text': '#000000',
+                'selection_bg': '#3399ff',
+                'selection_text': '#ffffff',
+                'menubar_bg': '#f0f0f0',
+                'menubar_text': '#000000',
+                'toolbar_bg': '#f5f5f5',
+                'statusbar_bg': '#e0e0e0',
+                'statusbar_text': '#000000',
+                'button_bg': '#e1e1e1',
+                'button_text': '#000000',
+                'button_hover': '#d4d4d4',
+                'border': '#c0c0c0'
+            },
+            'Dark': {
+                'name': 'Dark',
+                'background': '#2b2b2b',
+                'text': '#ffffff',
+                'selection_bg': '#4a9eff',
+                'selection_text': '#ffffff',
+                'menubar_bg': '#3c3c3c',
+                'menubar_text': '#ffffff',
+                'toolbar_bg': '#404040',
+                'statusbar_bg': '#333333',
+                'statusbar_text': '#ffffff',
+                'button_bg': '#454545',
+                'button_text': '#ffffff',
+                'button_hover': '#555555',
+                'border': '#555555'
+            },
+            'Solarized Light': {
+                'name': 'Solarized Light',
+                'background': '#fdf6e3',
+                'text': '#657b83',
+                'selection_bg': '#268bd2',
+                'selection_text': '#fdf6e3',
+                'menubar_bg': '#eee8d5',
+                'menubar_text': '#657b83',
+                'toolbar_bg': '#f5f0e7',
+                'statusbar_bg': '#eee8d5',
+                'statusbar_text': '#657b83',
+                'button_bg': '#eee8d5',
+                'button_text': '#657b83',
+                'button_hover': '#e8e2d4',
+                'border': '#d3cbb7'
+            },
+            'Solarized Dark': {
+                'name': 'Solarized Dark',
+                'background': '#002b36',
+                'text': '#839496',
+                'selection_bg': '#268bd2',
+                'selection_text': '#002b36',
+                'menubar_bg': '#073642',
+                'menubar_text': '#839496',
+                'toolbar_bg': '#0a3c47',
+                'statusbar_bg': '#073642',
+                'statusbar_text': '#839496',
+                'button_bg': '#073642',
+                'button_text': '#839496',
+                'button_hover': '#0c4956',
+                'border': '#586e75'
+            },
+            'High Contrast': {
+                'name': 'High Contrast',
+                'background': '#000000',
+                'text': '#ffffff',
+                'selection_bg': '#ffff00',
+                'selection_text': '#000000',
+                'menubar_bg': '#000000',
+                'menubar_text': '#ffffff',
+                'toolbar_bg': '#000000',
+                'statusbar_bg': '#000000',
+                'statusbar_text': '#ffffff',
+                'button_bg': '#333333',
+                'button_text': '#ffffff',
+                'button_hover': '#555555',
+                'border': '#ffffff'
+            },
+            'Monokai': {
+                'name': 'Monokai',
+                'background': '#272822',
+                'text': '#f8f8f2',
+                'selection_bg': '#49483e',
+                'selection_text': '#f8f8f2',
+                'menubar_bg': '#3e3d32',
+                'menubar_text': '#f8f8f2',
+                'toolbar_bg': '#414339',
+                'statusbar_bg': '#3e3d32',
+                'statusbar_text': '#f8f8f2',
+                'button_bg': '#49483e',
+                'button_text': '#f8f8f2',
+                'button_hover': '#5a594d',
+                'border': '#75715e'
+            }
+        }
+        self.current_theme = 'Default'
+    
+    def get_theme_names(self):
+        """Get list of available theme names"""
+        return list(self.themes.keys())
+    
+    def get_theme(self, theme_name):
+        """Get theme data by name"""
+        return self.themes.get(theme_name, self.themes['Default'])
+    
+    def generate_stylesheet(self, theme_name):
+        """Generate CSS stylesheet for the given theme"""
+        theme = self.get_theme(theme_name)
+        
+        return f"""
+        /* Main Window */
+        QMainWindow {{
+            background-color: {theme['background']};
+            color: {theme['text']};
+        }}
+        
+        /* Text Edit Areas */
+        QTextEdit {{
+            background-color: {theme['background']};
+            color: {theme['text']};
+            selection-background-color: {theme['selection_bg']};
+            selection-color: {theme['selection_text']};
+            border: 1px solid {theme['border']};
+            font-family: 'Courier New', 'Consolas', monospace;
+        }}
+        
+        /* Menu Bar */
+        QMenuBar {{
+            background-color: {theme['menubar_bg']};
+            color: {theme['menubar_text']};
+            border-bottom: 1px solid {theme['border']};
+        }}
+        
+        QMenuBar::item {{
+            background-color: transparent;
+            padding: 4px 8px;
+        }}
+        
+        QMenuBar::item:selected {{
+            background-color: {theme['selection_bg']};
+            color: {theme['selection_text']};
+        }}
+        
+        QMenu {{
+            background-color: {theme['menubar_bg']};
+            color: {theme['menubar_text']};
+            border: 1px solid {theme['border']};
+        }}
+        
+        QMenu::item {{
+            background-color: transparent;
+            padding: 6px 12px;
+        }}
+        
+        QMenu::item:selected {{
+            background-color: {theme['selection_bg']};
+            color: {theme['selection_text']};
+        }}
+        
+        QMenu::separator {{
+            height: 1px;
+            background-color: {theme['border']};
+            margin: 2px 0;
+        }}
+        
+        /* Tool Bar */
+        QToolBar {{
+            background-color: {theme['toolbar_bg']};
+            color: {theme['text']};
+            border: 1px solid {theme['border']};
+            spacing: 2px;
+        }}
+        
+        QToolBar::separator {{
+            background-color: {theme['border']};
+            width: 1px;
+            margin: 2px;
+        }}
+        
+        /* Status Bar */
+        QStatusBar {{
+            background-color: {theme['statusbar_bg']};
+            color: {theme['statusbar_text']};
+            border-top: 1px solid {theme['border']};
+        }}
+        
+        /* Buttons */
+        QPushButton {{
+            background-color: {theme['button_bg']};
+            color: {theme['button_text']};
+            border: 1px solid {theme['border']};
+            border-radius: 3px;
+            padding: 6px 12px;
+            min-width: 80px;
+        }}
+        
+        QPushButton:hover {{
+            background-color: {theme['button_hover']};
+        }}
+        
+        QPushButton:pressed {{
+            background-color: {theme['selection_bg']};
+            color: {theme['selection_text']};
+        }}
+        
+        QPushButton:disabled {{
+            background-color: {theme['border']};
+            color: {theme['statusbar_text']};
+        }}
+        
+        /* Combo Box */
+        QComboBox {{
+            background-color: {theme['button_bg']};
+            color: {theme['button_text']};
+            border: 1px solid {theme['border']};
+            border-radius: 3px;
+            padding: 4px 8px;
+            min-width: 100px;
+        }}
+        
+        QComboBox:hover {{
+            background-color: {theme['button_hover']};
+        }}
+        
+        QComboBox::drop-down {{
+            border: none;
+            width: 20px;
+        }}
+        
+        QComboBox::down-arrow {{
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 5px solid {theme['text']};
+        }}
+        
+        QComboBox QAbstractItemView {{
+            background-color: {theme['menubar_bg']};
+            color: {theme['menubar_text']};
+            selection-background-color: {theme['selection_bg']};
+            selection-color: {theme['selection_text']};
+            border: 1px solid {theme['border']};
+        }}
+        
+        /* Labels */
+        QLabel {{
+            background-color: transparent;
+            color: {theme['text']};
+        }}
+        
+        /* Line Edit */
+        QLineEdit {{
+            background-color: {theme['background']};
+            color: {theme['text']};
+            border: 1px solid {theme['border']};
+            border-radius: 3px;
+            padding: 4px;
+            selection-background-color: {theme['selection_bg']};
+            selection-color: {theme['selection_text']};
+        }}
+        
+        /* Dialog */
+        QDialog {{
+            background-color: {theme['background']};
+            color: {theme['text']};
+        }}
+        
+        QDialogButtonBox QPushButton {{
+            min-width: 70px;
+        }}
+        
+        /* Splitter */
+        QSplitter::handle {{
+            background-color: {theme['border']};
+            width: 2px;
+        }}
+        
+        QSplitter::handle:hover {{
+            background-color: {theme['selection_bg']};
+        }}
+        """
+
+
+class ThemeDialog(QDialog):
+    """Dialog for selecting application theme"""
+    
+    def __init__(self, current_theme, theme_manager, parent=None):
+        super().__init__(parent)
+        self.theme_manager = theme_manager
+        self.selected_theme = current_theme
+        
+        self.setWindowTitle("Select Theme")
+        self.setFixedSize(300, 150)
+        
+        layout = QVBoxLayout(self)
+        
+        # Theme selection
+        layout.addWidget(QLabel("Choose a theme:"))
+        
+        self.theme_combo = QComboBox()
+        self.theme_combo.addItems(self.theme_manager.get_theme_names())
+        self.theme_combo.setCurrentText(current_theme)
+        self.theme_combo.currentTextChanged.connect(self.on_theme_changed)
+        layout.addWidget(self.theme_combo)
+        
+        # Preview label
+        self.preview_label = QLabel("Preview: This is how text will look")
+        self.preview_label.setStyleSheet("padding: 10px; border: 1px solid gray;")
+        layout.addWidget(self.preview_label)
+        
+        # Buttons
+        button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        button_box.accepted.connect(self.accept)
+        button_box.rejected.connect(self.reject)
+        layout.addWidget(button_box)
+        
+        # Set initial preview
+        self.update_preview()
+    
+    def on_theme_changed(self, theme_name):
+        """Handle theme selection change"""
+        self.selected_theme = theme_name
+        self.update_preview()
+    
+    def update_preview(self):
+        """Update the preview with selected theme colors"""
+        theme = self.theme_manager.get_theme(self.selected_theme)
+        self.preview_label.setStyleSheet(f"""
+            background-color: {theme['background']};
+            color: {theme['text']};
+            padding: 10px;
+            border: 1px solid {theme['border']};
+        """)
+    
+    def get_selected_theme(self):
+        """Get the selected theme name"""
+        return self.selected_theme
 
 
 class FindDialog(QDialog):
@@ -258,9 +603,20 @@ class GuiLess(QMainWindow):
         self.config_dir = Path.home() / '.guiless'
         self.config_file = self.config_dir / 'config.json'
         
-        # Load recent files and initialize UI
-        self.load_recent_files()
+        # Theme management
+        self.theme_manager = ThemeManager()
+        self.current_theme = 'Default'
+        
+        # Two-page navigation mode
+        self.sliding_window_mode = True  # True for sliding (1-2, 2-3), False for spread (1-2, 3-4)
+        
+        # Load configuration and initialize UI
+        self.load_config()
         self.init_ui()
+        self.apply_theme(self.current_theme)
+    
+        # Update navigation mode UI after loading config
+        self.update_navigation_mode_ui()
         
         # Set fullscreen mode by default
         self.showMaximized()
@@ -347,6 +703,49 @@ class GuiLess(QMainWindow):
         self.word_wrap_action.triggered.connect(self.toggle_word_wrap)
         edit_menu.addAction(self.word_wrap_action)
         
+        # View menu
+        view_menu = menubar.addMenu('View')
+        
+        theme_action = QAction('Theme...', self)
+        theme_action.triggered.connect(self.change_theme)
+        view_menu.addAction(theme_action)
+        
+        view_menu.addSeparator()
+        
+        # Zoom submenu
+        zoom_menu = view_menu.addMenu('Zoom')
+        
+        zoom_in_action = QAction('Zoom In', self)
+        zoom_in_action.setShortcut('Ctrl+=')
+        zoom_in_action.triggered.connect(self.zoom_in)
+        zoom_menu.addAction(zoom_in_action)
+        
+        zoom_out_action = QAction('Zoom Out', self)
+        zoom_out_action.setShortcut('Ctrl+-')
+        zoom_out_action.triggered.connect(self.zoom_out)
+        zoom_menu.addAction(zoom_out_action)
+        
+        zoom_reset_action = QAction('Reset Zoom', self)
+        zoom_reset_action.setShortcut('Ctrl+0')
+        zoom_reset_action.triggered.connect(self.reset_zoom)
+        zoom_menu.addAction(zoom_reset_action)
+        
+        view_menu.addSeparator()
+        
+        # Two-page navigation mode submenu
+        nav_mode_menu = view_menu.addMenu('Two-Page Navigation')
+        
+        self.sliding_window_action = QAction('Sliding Window View (1-2, 2-3, 3-4...)', self)
+        self.sliding_window_action.setCheckable(True)
+        self.sliding_window_action.setChecked(True)  # Default
+        self.sliding_window_action.triggered.connect(self.set_sliding_window_mode)
+        nav_mode_menu.addAction(self.sliding_window_action)
+        
+        self.spread_view_action = QAction('Spread View (1-2, 3-4, 5-6...)', self)
+        self.spread_view_action.setCheckable(True)
+        self.spread_view_action.triggered.connect(self.set_spread_view_mode)
+        nav_mode_menu.addAction(self.spread_view_action)
+        
         # Help menu
         help_menu = menubar.addMenu('Help')
         
@@ -369,33 +768,6 @@ class GuiLess(QMainWindow):
         open_action = QAction('Open', self)
         open_action.triggered.connect(self.open_file)
         toolbar.addAction(open_action)
-        
-        toolbar.addSeparator()
-        
-        # Zoom controls
-        zoom_in_action = QAction('Zoom In', self)
-        zoom_in_action.setShortcut('Ctrl+=')
-        zoom_in_action.triggered.connect(self.zoom_in)
-        toolbar.addAction(zoom_in_action)
-        
-        zoom_out_action = QAction('Zoom Out', self)
-        zoom_out_action.setShortcut('Ctrl+-')
-        zoom_out_action.triggered.connect(self.zoom_out)
-        toolbar.addAction(zoom_out_action)
-        
-        zoom_reset_action = QAction('Reset Zoom', self)
-        zoom_reset_action.setShortcut('Ctrl+0')
-        zoom_reset_action.triggered.connect(self.reset_zoom)
-        toolbar.addAction(zoom_reset_action)
-        
-        toolbar.addSeparator()
-        
-        # Word wrap toggle
-        word_wrap_action = QAction('Word Wrap', self)
-        word_wrap_action.setCheckable(True)
-        word_wrap_action.setChecked(True)
-        word_wrap_action.triggered.connect(self.toggle_word_wrap)
-        toolbar.addAction(word_wrap_action)
     
     def create_content_area(self, layout):
         """Create the main content viewing area"""
@@ -417,11 +789,12 @@ class GuiLess(QMainWindow):
         # Create navigation controls for two-page mode
         nav_layout = QHBoxLayout()
         
-        self.prev_page_btn = QPushButton("Previous Pages")
+        # Button text will be set based on navigation mode
+        self.prev_page_btn = QPushButton("Previous Page")
         self.prev_page_btn.clicked.connect(self.previous_pages)
         self.prev_page_btn.hide()
-        
-        self.next_page_btn = QPushButton("Next Pages")
+    
+        self.next_page_btn = QPushButton("Next Page")
         self.next_page_btn.clicked.connect(self.next_pages)
         self.next_page_btn.hide()
         
@@ -438,6 +811,9 @@ class GuiLess(QMainWindow):
         self.prev_page_btn.show()
         self.next_page_btn.show()
         self.page_info_label.show()
+    
+        # Set initial button text based on navigation mode
+        self.update_navigation_button_text()
         
         layout.addLayout(nav_layout)
     
@@ -464,7 +840,6 @@ class GuiLess(QMainWindow):
             'N': self.find_previous,  # Find previous
             'Space': self.next_pages,  # Next pages (like less)
             'b': self.previous_pages,  # Previous pages (like less)
-            'w': self.toggle_word_wrap,  # Toggle word wrap
         }
         
         for key, func in shortcuts.items():
@@ -473,8 +848,8 @@ class GuiLess(QMainWindow):
             action.triggered.connect(func)
             self.addAction(action)
     
-    def load_recent_files(self):
-        """Load recent files list and last directory from config file"""
+    def load_config(self):
+        """Load configuration including recent files, last directory, and theme"""
         try:
             if self.config_file.exists():
                 with open(self.config_file, 'r') as f:
@@ -485,29 +860,39 @@ class GuiLess(QMainWindow):
                     # Old format - just recent files
                     self.recent_files = config_data
                     self.last_directory = str(Path.home())  # Default
+                    self.current_theme = 'Default'  # Default theme
+                    self.sliding_window_mode = True  # Default navigation mode
                 else:
-                    # New format - dict with recent_files and last_directory
+                    # New format - dict with all settings
                     self.recent_files = config_data.get('recent_files', [])
                     self.last_directory = config_data.get('last_directory', str(Path.home()))
+                    self.current_theme = config_data.get('theme', 'Default')
+                    self.sliding_window_mode = config_data.get('sliding_window_mode', True)
                     
                 # Remove files that no longer exist
                 self.recent_files = [f for f in self.recent_files if os.path.exists(f)]
             else:
                 self.recent_files = []
                 self.last_directory = str(Path.home())
+                self.current_theme = 'Default'
+                self.sliding_window_mode = True
         except (json.JSONDecodeError, IOError):
             self.recent_files = []
             self.last_directory = str(Path.home())
+            self.current_theme = 'Default'
+            self.sliding_window_mode = True
     
-    def save_recent_files(self):
-        """Save recent files list and last directory to config file"""
+    def save_config(self):
+        """Save configuration including recent files, last directory, and theme"""
         try:
             # Create config directory if it doesn't exist
             self.config_dir.mkdir(exist_ok=True)
             
             config_data = {
                 'recent_files': self.recent_files,
-                'last_directory': self.last_directory
+                'last_directory': self.last_directory,
+                'theme': self.current_theme,
+                'sliding_window_mode': self.sliding_window_mode
             }
             
             with open(self.config_file, 'w') as f:
@@ -530,7 +915,7 @@ class GuiLess(QMainWindow):
         self.recent_files = self.recent_files[:self.max_recent_files]
         
         # Save and update menu
-        self.save_recent_files()
+        self.save_config()
         self.update_recent_menu()
     
     def update_recent_menu(self):
@@ -584,7 +969,7 @@ class GuiLess(QMainWindow):
             # File no longer exists, remove from recent files
             if file_path in self.recent_files:
                 self.recent_files.remove(file_path)
-                self.save_recent_files()
+                self.save_config()
                 self.update_recent_menu()
             QMessageBox.warning(self, "File Not Found", f"The file '{file_path}' no longer exists.")
     
@@ -599,7 +984,7 @@ class GuiLess(QMainWindow):
         
         if reply == QMessageBox.Yes:
             self.recent_files = []
-            self.save_recent_files()
+            self.save_config()
             self.update_recent_menu()
     
     def load_most_recent_file(self):
@@ -708,26 +1093,42 @@ class GuiLess(QMainWindow):
         
         # Update page info
         total_pages = max(self.text_edit_1.total_pages, 1)
+        mode_text = "Sliding" if self.sliding_window_mode else "Spread"
         if right_page <= total_pages:
-            self.page_info_label.setText(f"Pages {left_page}-{right_page} of {total_pages}")
+            self.page_info_label.setText(f"Pages {left_page}-{right_page} of {total_pages} ({mode_text})")
         else:
-            self.page_info_label.setText(f"Page {left_page} of {total_pages}")
+            self.page_info_label.setText(f"Page {left_page} of {total_pages} ({mode_text})")
         
         # Enable/disable navigation buttons
         self.prev_page_btn.setEnabled(left_page > 1)
-        self.next_page_btn.setEnabled(left_page < total_pages)
+        if self.sliding_window_mode:
+            # In sliding mode, we can go next as long as we're not at the last page
+            self.next_page_btn.setEnabled(left_page < total_pages)
+        else:
+            # In spread mode, we can go next as long as there are at least 2 more pages
+            self.next_page_btn.setEnabled(left_page + 1 < total_pages)
     
     def previous_pages(self):
         """Go to previous pair of pages"""
         if self.current_left_page > 1:
-            self.current_left_page = max(1, self.current_left_page - 2)
+            if self.sliding_window_mode:
+                # Sliding window: move back by 1 page (1-2 -> 2-3 becomes 1-2)
+                self.current_left_page = max(1, self.current_left_page - 1)
+            else:
+                # Spread view: move back by 2 pages (3-4 -> 1-2)
+                self.current_left_page = max(1, self.current_left_page - 2)
             self.update_page_display()
     
     def next_pages(self):
         """Go to next pair of pages"""
         total_pages = max(self.text_edit_1.total_pages, 1)
         if self.current_left_page < total_pages:
-            self.current_left_page = min(total_pages, self.current_left_page + 2)
+            if self.sliding_window_mode:
+                # Sliding window: move forward by 1 page (1-2 -> 2-3)
+                self.current_left_page = min(total_pages, self.current_left_page + 1)
+            else:
+                # Spread view: move forward by 2 pages (1-2 -> 3-4)
+                self.current_left_page = min(total_pages, self.current_left_page + 2)
             self.update_page_display()
     
     def zoom_in(self):
@@ -801,25 +1202,111 @@ class GuiLess(QMainWindow):
                 f"Error: {str(e)}"
             )
     
+    def change_theme(self):
+        """Open theme selection dialog"""
+        dialog = ThemeDialog(self.current_theme, self.theme_manager, self)
+        if dialog.exec_() == QDialog.Accepted:
+            new_theme = dialog.get_selected_theme()
+            if new_theme != self.current_theme:
+                self.current_theme = new_theme
+                self.apply_theme(new_theme)
+                self.save_config()
+                self.status_bar.showMessage(f"Theme changed to {new_theme}", 2000)
+    
+    def apply_theme(self, theme_name):
+        """Apply the specified theme to the application"""
+        stylesheet = self.theme_manager.generate_stylesheet(theme_name)
+        self.setStyleSheet(stylesheet)
+        
+        # Update window title to reflect current theme if different from default
+        if theme_name != 'Default':
+            current_title = self.windowTitle()
+            if ' - Theme: ' not in current_title:
+                self.setWindowTitle(f"{current_title} - Theme: {theme_name}")
+            else:
+                # Replace existing theme name
+                base_title = current_title.split(' - Theme: ')[0]
+                self.setWindowTitle(f"{base_title} - Theme: {theme_name}")
+        else:
+            # Remove theme name from title for default theme
+            current_title = self.windowTitle()
+            if ' - Theme: ' in current_title:
+                base_title = current_title.split(' - Theme: ')[0]
+                self.setWindowTitle(base_title)
+    
+    def update_navigation_mode_ui(self):
+        """Update UI elements based on current navigation mode"""
+        self.sliding_window_action.setChecked(self.sliding_window_mode)
+        self.spread_view_action.setChecked(not self.sliding_window_mode)
+        self.update_navigation_button_text()
+    
+    def update_navigation_button_text(self):
+        """Update navigation button text based on current mode"""
+        if self.sliding_window_mode:
+            self.prev_page_btn.setText("Previous Page")
+            self.next_page_btn.setText("Next Page")
+        else:
+            self.prev_page_btn.setText("Previous Spread")
+            self.next_page_btn.setText("Next Spread")
+    
     def show_about(self):
         """Show about dialog"""
         QMessageBox.about(
             self, "About GUI Less",
-            "GUI Less v1.2.0\n\n"
+            "GUI Less v1.2.5\n\n"
             "A GUI version of the less utility built with PyQt5.\n\n"
             "Features:\n"
             "• Two-page mode as default for enhanced reading\n"
             "• Last directory memory for convenient navigation\n"
             "• File viewing with syntax similar to less\n"
-            "• Ctrl+Scroll wheel zooming\n"
+            "• Zoom controls (Ctrl+/-, Ctrl+0 to reset)\n"
             "• Page navigation (Space/b for next/previous)\n"
             "• Optional line numbering\n"
             "• Toggleable word wrap for long lines\n"
             "• Recent files menu with auto-load\n"
             "• Fullscreen mode by default\n"
-            "• Keyboard shortcuts compatible with less"
+            "• Keyboard shortcuts compatible with less\n"
+            "• Multiple UI themes for personalization\n"
+            "• Two navigation modes: Sliding Window and Spread View"
         )
-
+    
+    def set_sliding_window_mode(self):
+        """Set navigation to sliding window mode (1-2, 2-3, 3-4...)"""
+        self.sliding_window_mode = True
+        self.sliding_window_action.setChecked(True)
+        self.spread_view_action.setChecked(False)
+        
+        # Update button text
+        self.prev_page_btn.setText("Previous Page")
+        self.next_page_btn.setText("Next Page")
+        
+        # Save configuration
+        self.save_config()
+        
+        # Update display if in two-page mode
+        if self.two_page_mode:
+            self.update_page_display()
+        
+        self.status_bar.showMessage("Navigation mode: Sliding Window (1-2, 2-3, 3-4...)", 3000)
+    
+    def set_spread_view_mode(self):
+        """Set navigation to spread view mode (1-2, 3-4, 5-6...)"""
+        self.sliding_window_mode = False
+        self.sliding_window_action.setChecked(False)
+        self.spread_view_action.setChecked(True)
+        
+        # Update button text
+        self.prev_page_btn.setText("Previous Spread")
+        self.next_page_btn.setText("Next Spread")
+        
+        # Save configuration
+        self.save_config()
+        
+        # Update display if in two-page mode
+        if self.two_page_mode:
+            self.update_page_display()
+        
+        self.status_bar.showMessage("Navigation mode: Spread View (1-2, 3-4, 5-6...)", 3000)
 
 def main():
     """Main application entry point"""
@@ -837,6 +1324,10 @@ def main():
                 window.current_file = file_path
                 window.setWindowTitle(f"GUI Less - {os.path.basename(file_path)}")
                 window.add_recent_file(file_path)
+                
+                # If in two-page mode, set up pagination
+                if window.two_page_mode:
+                    window.setup_two_page_display()
         else:
             print(f"Error: File '{file_path}' not found.")
             sys.exit(1)
