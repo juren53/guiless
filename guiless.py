@@ -548,10 +548,12 @@ class LessTextEdit(QTextEdit):
         
         # Convert all text lines to visual lines using textwrap
         all_visual_lines = []
+        visual_to_text_line_map = []  # Track which text line each visual line came from
         
-        for text_line in lines:
+        for text_line_num, text_line in enumerate(lines):
             if not text_line.strip():  # Empty line
                 all_visual_lines.append('')
+                visual_to_text_line_map.append(text_line_num + 1)  # 1-based line numbers
             else:
                 # Use textwrap to break long lines properly
                 wrapped_lines = textwrap.wrap(
@@ -562,8 +564,12 @@ class LessTextEdit(QTextEdit):
                 )
                 if wrapped_lines:
                     all_visual_lines.extend(wrapped_lines)
+                    # Map each visual line to its original text line
+                    for _ in wrapped_lines:
+                        visual_to_text_line_map.append(text_line_num + 1)
                 else:
                     all_visual_lines.append('')  # Empty wrapped line
+                    visual_to_text_line_map.append(text_line_num + 1)
         
         # Create page breaks based on visual lines
         total_visual_lines = len(all_visual_lines)
@@ -572,6 +578,7 @@ class LessTextEdit(QTextEdit):
         # Store visual lines and pagination info
         self.visual_lines = all_visual_lines
         self.visual_lines_per_page = visual_lines_per_page
+        self.visual_to_text_line_map = visual_to_text_line_map
         self.use_visual_line_pagination = True
     
     def calculate_dynamic_page_breaks(self, lines):
@@ -847,8 +854,23 @@ class LessTextEdit(QTextEdit):
                 page_visual_lines = self.visual_lines[start_visual_line:end_visual_line]
                 page_content = '\n'.join(page_visual_lines)
                 
-                # Line numbers are complex with visual lines - skip for now
-                # TODO: Implement proper line numbering for visual lines
+                # Apply line numbers if enabled
+                if self.show_line_numbers and hasattr(self, 'visual_to_text_line_map'):
+                    numbered_lines = []
+                    total_text_lines = len(self.original_content.split('\n'))
+                    width = len(str(total_text_lines))
+                    
+                    for i, visual_line in enumerate(page_visual_lines):
+                        visual_line_index = start_visual_line + i
+                        if visual_line_index < len(self.visual_to_text_line_map):
+                            text_line_num = self.visual_to_text_line_map[visual_line_index]
+                            line_num = str(text_line_num).rjust(width)
+                            numbered_lines.append(f"{line_num}: {visual_line}")
+                        else:
+                            # Fallback if mapping is incomplete
+                            numbered_lines.append(f"{'?'.rjust(width)}: {visual_line}")
+                    
+                    page_content = '\n'.join(numbered_lines)
                 
                 self.setPlainText(page_content)
             else:
