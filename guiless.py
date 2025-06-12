@@ -503,7 +503,23 @@ class LessTextEdit(QTextEdit):
             return False
     
     def calculate_pagination(self):
-        """Calculate how many lines fit per page"""
+        """Calculate pagination using HTML-based document layout"""
+        if not self.original_content:
+            return
+        
+        # Use HTML-based pagination for accurate layout
+        self.calculate_html_pagination()
+        
+        # Store the HTML document for page rendering
+        if hasattr(self, 'html_content'):
+            self.use_html_pagination = True
+        else:
+            # Fallback to old method if HTML conversion fails
+            self.use_html_pagination = False
+            self.calculate_fallback_pagination()
+    
+    def calculate_fallback_pagination(self):
+        """Fallback pagination calculation when HTML method fails"""
         if not self.original_content:
             return
             
@@ -517,8 +533,26 @@ class LessTextEdit(QTextEdit):
         
         # Calculate total pages based on word wrap mode
         if self.word_wrap_enabled:
-            # For word wrap, we need to count visual lines, not just text lines
-            self.calculate_wrapped_pagination()
+            # For word wrap, use aggressive reduction for long-line documents
+            lines = self.original_content.split('\n')
+            total_lines = len(lines)
+            
+            # Analyze line lengths for wrapping estimation
+            long_line_count = sum(1 for line in lines if len(line) > 100)
+            long_line_ratio = long_line_count / max(total_lines, 1) if total_lines > 0 else 0
+            
+            if long_line_ratio > 0.4:  # More than 40% of lines are very long
+                # Extremely conservative - assume 8x wrapping for news articles
+                effective_lines_per_page = max(1, self.lines_per_page // 8)
+            elif long_line_ratio > 0.2:  # 20-40% of lines are long
+                # Very conservative pagination - assume 6x wrapping
+                effective_lines_per_page = max(1, self.lines_per_page // 6)
+            else:
+                # Normal text - assume 4x wrapping
+                effective_lines_per_page = max(1, self.lines_per_page // 4)
+            
+            self.total_pages = max(1, (total_lines + effective_lines_per_page - 1) // effective_lines_per_page)
+            self.effective_lines_per_page = effective_lines_per_page
         else:
             # Simple line-based pagination for no-wrap mode
             total_lines = len(self.original_content.split('\n'))
@@ -686,8 +720,11 @@ class LessTextEdit(QTextEdit):
         self.ensureCursorVisible()
     
     def set_wrapped_page_content(self, page_number):
-        """Set page content for word wrap mode using content-density pagination"""
-        if hasattr(self, 'content_based_pagination') and hasattr(self, 'page_breaks'):
+        """Set page content for word wrap mode using HTML-based pagination"""
+        if hasattr(self, 'use_html_pagination') and self.use_html_pagination:
+            # Use HTML-based pagination for accurate layout
+            self.set_html_page_content(page_number)
+        elif hasattr(self, 'content_based_pagination') and hasattr(self, 'page_breaks'):
             # Use content-based pagination
             lines = self.original_content.split('\n')
             
@@ -720,6 +757,74 @@ class LessTextEdit(QTextEdit):
         cursor.movePosition(QTextCursor.Start)
         self.setTextCursor(cursor)
         self.ensureCursorVisible()
+    
+    def set_html_page_content(self, page_number):
+        """Set page content using HTML-based pagination for perfect viewport fitting"""
+        if not hasattr(self, 'html_content') or not self.html_content:
+            # Fallback if HTML content not available
+            self.set_wrapped_page_content_fallback(page_number)
+            return
+        
+        # Create a QTextDocument for page extraction
+        temp_doc = QTextDocument()
+        temp_doc.setHtml(self.html_content)
+        temp_doc.setDefaultFont(self.font())
+        temp_doc.setPageSize(self.viewport().size())
+        
+        # Calculate page content bounds
+        page_height = self.viewport().height() - 40  # Leave margin
+        start_y = (page_number - 1) * page_height
+        end_y = start_y + page_height
+        
+        # Extract text that fits in the page bounds
+        cursor = QTextCursor(temp_doc)
+        cursor.movePosition(QTextCursor.Start)
+        
+        # Move to start position for this page
+        while cursor.position() < temp_doc.characterCount() - 1:
+            rect = temp_doc.documentLayout().blockBoundingRect(cursor.block())
+            if rect.y() >= start_y:
+                break
+            cursor.movePosition(QTextCursor.NextBlock)
+        
+        page_start_pos = cursor.position()
+        
+        # Find end position for this page
+        while cursor.position() < temp_doc.characterCount() - 1:
+            rect = temp_doc.documentLayout().blockBoundingRect(cursor.block())
+            if rect.y() + rect.height() > end_y:
+                break
+            cursor.movePosition(QTextCursor.NextBlock)
+        
+        page_end_pos = cursor.position()
+        
+        # Extract the page content
+        page_cursor = QTextCursor(temp_doc)
+        page_cursor.setPosition(page_start_pos)
+        page_cursor.setPosition(page_end_pos, QTextCursor.KeepAnchor)
+        page_text = page_cursor.selectedText()
+        
+        # Apply line numbers if enabled
+        if self.show_line_numbers and page_text:
+            lines = page_text.split('\n')
+            numbered_lines = []
+            total_lines = len(self.original_content.split('\n'))
+            width = len(str(total_lines))
+            
+            # Estimate starting line number based on position
+            start_line = max(1, (page_number - 1) * 10)  # Rough estimate
+            
+            for i, line in enumerate(lines, start_line):
+                line_num = str(i).rjust(width)
+                numbered_lines.append(f"{line_num}: {line}")
+            
+            page_text = '\n'.join(numbered_lines)
+        
+        # Set the page content
+        if page_text.strip():
+            self.setPlainText(page_text)
+        else:
+            self.setPlainText("")
     
     def set_wrapped_page_content_fallback(self, page_number):
         """Fallback method for wrapped content pagination"""
