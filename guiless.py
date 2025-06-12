@@ -23,7 +23,7 @@ from PyQt5.QtWidgets import (QDialog, QLineEdit, QPushButton, QDialogButtonBox,
     QWidget, QMenuBar, QAction, QFileDialog, QMessageBox, QSplitter,
     QCheckBox, QLabel, QToolBar, QStatusBar, QComboBox
 )
-from PyQt5.QtCore import Qt, QTimer, pyqtSignal
+from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QSizeF
 from PyQt5.QtGui import QFont, QKeySequence, QTextCursor, QTextDocument, QTextCharFormat, QColor
 
 
@@ -638,7 +638,7 @@ class LessTextEdit(QTextEdit):
         
         # Set the page size based on viewport
         viewport_height = self.viewport().height() - 40  # Leave margin
-        temp_doc.setPageSize(self.viewport().size())
+        temp_doc.setPageSize(QSizeF(self.viewport().size()))
         
         # Calculate total pages
         self.total_pages = max(1, temp_doc.pageCount())
@@ -769,7 +769,7 @@ class LessTextEdit(QTextEdit):
         temp_doc = QTextDocument()
         temp_doc.setHtml(self.html_content)
         temp_doc.setDefaultFont(self.font())
-        temp_doc.setPageSize(self.viewport().size())
+        temp_doc.setPageSize(QSizeF(self.viewport().size()))
         
         # Calculate page content bounds
         page_height = self.viewport().height() - 40  # Leave margin
