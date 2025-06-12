@@ -319,7 +319,7 @@ class ThemeDialog(QDialog):
         self.selected_theme = current_theme
         
         self.setWindowTitle("Select Theme")
-        self.setFixedSize(300, 150)
+        self.setFixedSize(400, 200)
         
         layout = QVBoxLayout(self)
         
@@ -333,8 +333,9 @@ class ThemeDialog(QDialog):
         layout.addWidget(self.theme_combo)
         
         # Preview label
-        self.preview_label = QLabel("Preview: This is how text will look")
-        self.preview_label.setStyleSheet("padding: 10px; border: 1px solid gray;")
+        self.preview_label = QLabel("Preview: This is how text will look with the selected theme")
+        self.preview_label.setStyleSheet("padding: 15px; border: 1px solid gray; min-height: 40px;")
+        self.preview_label.setWordWrap(True)
         layout.addWidget(self.preview_label)
         
         # Buttons
